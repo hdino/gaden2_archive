@@ -1,22 +1,22 @@
-<package>
+<?xml version="1.0"?>
+<?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+<package format="3">
   <name>gaden_environment</name>
-  <version>1.0.0</version>
-  <description>Package for visualizing on RVIZ the simulation environment (walls, obstacles and gas source).</description>
+  <version>0.0.0</version>
+  <description>Package for visualizing the simulation environment (walls, obstacles and gas source) in rviz.</description>
   <maintainer email="jgmonroy@uma.es">Javier Monroy</maintainer>
-
   <license>GPLv3</license>
 
-  <!-- Dependencies which this package needs to build itself. -->
-  <buildtool_depend>catkin</buildtool_depend>
-
-  <!-- Dependencies needed to compile this package. -->
-  <build_depend>visualization_msgs</build_depend>
-  <build_depend>tf</build_depend>
-  <build_depend>roscpp</build_depend>
-
-  <!-- Dependencies needed after this package is compiled. -->
-  <run_depend>visualization_msgs</run_depend>
-  <run_depend>tf</run_depend>
-  <run_depend>roscpp</run_depend>
+  <buildtool_depend>ament_cmake</buildtool_depend>
   
+  <depend>rclcpp</depend>
+  <depend>tf2</depend>
+  <depend>visualization_msgs</depend>
+
+  <test_depend>ament_lint_auto</test_depend>
+  <test_depend>ament_lint_common</test_depend>
+
+  <export>
+    <build_type>ament_cmake</build_type>
+  </export>
 </package>

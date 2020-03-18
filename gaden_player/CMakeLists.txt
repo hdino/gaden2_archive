@@ -1,36 +1,35 @@
-cmake_minimum_required(VERSION 2.8.3)
-
-set(CMAKE_CXX_FLAGS "-lboost_iostreams -std=c++11 ${CMAKE_CXX_FLAGS}")
+cmake_minimum_required(VERSION 3.5)
 project(gaden_player)
-find_package(catkin REQUIRED COMPONENTS
-    roscpp
-    visualization_msgs
-    std_msgs
-    nav_msgs
-    tf
-    message_generation
-)
-find_package(Boost REQUIRED COMPONENTS iostreams)
-add_service_files(
-  FILES
-  GasPosition.srv
-  WindPosition.srv
-)
 
-generate_messages(
-    DEPENDENCIES
-    std_msgs
-)
+# Default to C99
+if(NOT CMAKE_C_STANDARD)
+  set(CMAKE_C_STANDARD 99)
+endif()
 
+# Default to C++14
+if(NOT CMAKE_CXX_STANDARD)
+  set(CMAKE_CXX_STANDARD 14)
+endif()
 
-FILE(GLOB_RECURSE MYFILES_CPP "src/*.cpp")
-catkin_package(
-    DEPENDS roscpp visualization_msgs std_msgs nav_msgs tf Boost
-)
+if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+  add_compile_options(-Wall -Wextra -Wpedantic)
+endif()
 
-include_directories(include ${Boost_INCLUDE_DIRS} ${catkin_INCLUDE_DIRS})
+# find dependencies
+find_package(ament_cmake REQUIRED)
+# uncomment the following section in order to fill in
+# further dependencies manually.
+# find_package(<dependency> REQUIRED)
 
-add_executable(gaden_player  ${MYFILES_CPP})
-add_dependencies(gaden_player ${olfaction_msgs_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+if(BUILD_TESTING)
+  find_package(ament_lint_auto REQUIRED)
+  # the following line skips the linter which checks for copyrights
+  # uncomment the line when a copyright and license is not present in all source files
+  #set(ament_cmake_copyright_FOUND TRUE)
+  # the following line skips cpplint (only works in a git repo)
+  # uncomment the line when this package is not in a git repo
+  #set(ament_cmake_cpplint_FOUND TRUE)
+  ament_lint_auto_find_test_dependencies()
+endif()
 
-target_link_libraries(${PROJECT_NAME} ${Boost_LIBRARIES} ${catkin_LIBRARIES})
+ament_package()

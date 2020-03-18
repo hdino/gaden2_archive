@@ -1,33 +1,35 @@
+cmake_minimum_required(VERSION 3.5)
+project(gaden_filament_simulator)
 
-cmake_minimum_required(VERSION 2.8.3)
-project(gaden_filament_simulator CXX)
+# Default to C99
+if(NOT CMAKE_C_STANDARD)
+  set(CMAKE_C_STANDARD 99)
+endif()
 
-set(CMAKE_CXX_FLAGS "-lboost_iostreams -std=c++11 -fopenmp ${CMAKE_CXX_FLAGS}")
-set(CMAKE_BUILD_TYPE "Debug")
-find_package(catkin REQUIRED COMPONENTS
-	roscpp
-	visualization_msgs
-	std_msgs
-	nav_msgs
-	pcl_ros
-)
+# Default to C++14
+if(NOT CMAKE_CXX_STANDARD)
+  set(CMAKE_CXX_STANDARD 14)
+endif()
 
-find_package(PCL REQUIRED)
-find_package(OpenCV REQUIRED)
-find_package(Boost REQUIRED COMPONENTS iostreams)
-catkin_package(
-    DEPENDS roscpp visualization_msgs std_msgs nav_msgs Boost
-)
+if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+  add_compile_options(-Wall -Wextra -Wpedantic)
+endif()
 
-include_directories(include)
+# find dependencies
+find_package(ament_cmake REQUIRED)
+# uncomment the following section in order to fill in
+# further dependencies manually.
+# find_package(<dependency> REQUIRED)
 
-include_directories(${catkin_INCLUDE_DIRS} $(PCL_INCLUDE_DIRS) ${OpenCV_INCLUDE_DIRS})
-MESSAGE("PCL ARE: ${PCL_INCLUDE_DIRS}")
+if(BUILD_TESTING)
+  find_package(ament_lint_auto REQUIRED)
+  # the following line skips the linter which checks for copyrights
+  # uncomment the line when a copyright and license is not present in all source files
+  #set(ament_cmake_copyright_FOUND TRUE)
+  # the following line skips cpplint (only works in a git repo)
+  # uncomment the line when this package is not in a git repo
+  #set(ament_cmake_cpplint_FOUND TRUE)
+  ament_lint_auto_find_test_dependencies()
+endif()
 
-FILE(GLOB_RECURSE MYFILES_CPP "src/*.cpp")
-add_executable(filament_simulator ${MYFILES_CPP})
-
-target_link_libraries(filament_simulator
-   ${catkin_LIBRARIES}
-   ${OpenCV_LIBRARIES}
- )
+ament_package()
