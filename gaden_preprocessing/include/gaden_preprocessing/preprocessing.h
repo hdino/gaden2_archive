@@ -1,5 +1,5 @@
-#ifndef Preprocess_H
-#define Preprocess_H
+#ifndef GADEN_PREPROCESSING_PREPROCESSING_H_INCLUDED
+#define GADEN_PREPROCESSING_PREPROCESSING_H_INCLUDED
 
 #include <ros/ros.h>
 #include <std_msgs/Bool.h>
@@ -57,4 +57,4 @@ void findDimensions(std::string filename);
 //translates the point cloud to the gaden wind format
 void openFoam_to_gaden(std::string filename, std::vector<std::vector<std::vector<int> > >& env);
 
-#endif
+#endif // GADEN_PREPROCESSING_PREPROCESSING_H_INCLUDED

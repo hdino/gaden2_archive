@@ -7,3 +7,4 @@ INCLUDEPATH += \
     /opt/ros/eloquent/include
 
 include(gaden_environment/gaden_environment.pri)
+include(gaden_preprocessing/gaden_preprocessing.pri)

@@ -1,8 +1,0 @@
-environment:
-    ros__parameters:
-        some_int: 41
-        log_severity: 1 #0-debug, 1-info, 2-Warn, 3-Error, 4-Fatal
-        a_string: "Hello world"
-        some_lists:
-            some_integers: [1, 2, 3, 4]
-            some_doubles : [3.14, 2.718]

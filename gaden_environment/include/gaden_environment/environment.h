@@ -5,8 +5,7 @@
 #include <string>
 #include <vector>
 
-#include <geometry_msgs/msg/point.hpp>
-#include <std_msgs/msg/color_rgba.hpp>
+#include <visualization_msgs/msg/marker.hpp>
 
 namespace rclcpp {
 class Node;
@@ -21,7 +20,23 @@ struct GasSource
     double scale;
 };
 
-bool loadNodeParameters(std::shared_ptr<rclcpp::Node> ros_node);
+struct CadModel
+{
+    std::string path;
+    std_msgs::msg::ColorRGBA color;
+};
+
+struct EnvironmentConfig
+{
+    std::string fixed_frame;
+    std::vector<GasSource> gas_sources;
+    std::vector<CadModel> cad_models;
+};
+
+EnvironmentConfig loadEnvironmentConfig(std::shared_ptr<rclcpp::Node> &ros_node);
+
+visualization_msgs::msg::Marker getAsMarker(const GasSource &gas_source, int id);
+visualization_msgs::msg::Marker getAsMarker(const CadModel &cad_model, int id);
 
 } // namespace gaden
 

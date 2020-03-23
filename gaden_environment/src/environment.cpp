@@ -6,10 +6,12 @@
  */
 
 #include <gaden_environment/environment.h>
+#include <gaden_environment/type_helper.h>
 
 #include <rclcpp/rclcpp.hpp>
+#include <yaml-cpp/yaml.h>
 
-#include <iostream>
+//#include <iostream>
 
 namespace gaden {
 
@@ -17,31 +19,103 @@ namespace gaden {
 //      Load Node parameters      //
 // ===============================//
 
-bool loadNodeParameters(std::shared_ptr<rclcpp::Node> ros_node)
+bool getNodeParameter(std::shared_ptr<rclcpp::Node> &ros_node, const char *parameter_name, std::string &target)
 {
-    std::vector<std::string> empty_prefix_list;
-    rcl_interfaces::msg::ListParametersResult parameters = ros_node->list_parameters(empty_prefix_list, 0);
-
-    std::cout << "Parameters:" << std::endl;
-    for (const std::string &str : parameters.names)
-        std::cout << "  " << str << std::endl;
-
-
     rclcpp::Parameter parameter;
-    if (!ros_node->get_parameter("some_int", parameter))
+    if (!ros_node->get_parameter(parameter_name, parameter))
     {
-        RCLCPP_ERROR(ros_node->get_logger(), "Read param failed");
+        RCLCPP_ERROR_STREAM(ros_node->get_logger(),
+                            "Parameter " << parameter_name << " not defined.");
         return false;
     }
-    if (parameter.get_type() != rclcpp::ParameterType::PARAMETER_INTEGER)
+    if (parameter.get_type() != rclcpp::ParameterType::PARAMETER_STRING)
     {
-        RCLCPP_ERROR(ros_node->get_logger(), "Read param type mismatch");
+        RCLCPP_ERROR_STREAM(ros_node->get_logger(),
+                            "Parameter " << parameter_name << " type mismatch.");
         return false;
     }
-
-    RCLCPP_INFO(ros_node->get_logger(), std::to_string(parameter.as_int()).c_str());
-
+    target = parameter.as_string();
     return true;
+}
+
+EnvironmentConfig loadEnvironmentConfig(std::shared_ptr<rclcpp::Node> &ros_node)
+{
+//    // List all parameters
+//    std::vector<std::string> empty_prefix_list;
+//    rcl_interfaces::msg::ListParametersResult parameters = ros_node->list_parameters(empty_prefix_list, 0);
+//    std::cout << "Parameters:" << std::endl;
+//    for (const std::string &str : parameters.names)
+//        std::cout << "  " << str << std::endl;
+
+    EnvironmentConfig config;
+
+    std::string base_path;
+    if (!getNodeParameter(ros_node, "base_path", base_path))
+        return config;
+
+    YAML::Node yaml_config = YAML::LoadFile(base_path + "config.yaml");
+    YAML::Node environment = yaml_config["environment"];
+    std::cout << environment << std::endl;
+
+    config.fixed_frame = environment["fixed_frame"].as<std::string>();
+
+    // fill in gas sources
+    for (const YAML::Node &item : environment["gas_sources"])
+    {
+        GasSource gas_source;
+        gas_source.position = type_helper::getPositionFromYaml(item);
+        gas_source.scale = item["scale"].as<double>();
+        gas_source.color = type_helper::getColorFromYaml(item);
+        config.gas_sources.push_back(gas_source);
+    }
+
+    // fill in CAD models
+    for (const YAML::Node &item : environment["cad_models"])
+    {
+        CadModel cad_model;
+        cad_model.path = base_path + item["path"].as<std::string>();
+        cad_model.color = type_helper::getColorFromYaml(item);
+        config.cad_models.push_back(cad_model);
+    }
+
+    return config;
+}
+
+visualization_msgs::msg::Marker getAsMarker(const GasSource &gas_source, int id)
+{
+    visualization_msgs::msg::Marker source;
+    source.id = id;
+    source.ns = "gas_sources";
+    source.action = visualization_msgs::msg::Marker::ADD;
+    source.type = visualization_msgs::msg::Marker::CUBE;
+
+    source.pose.position = gas_source.position;
+    source.pose.position.z *= 0.5;
+
+    source.scale = type_helper::getVector3(gas_source.scale);
+    source.scale.z = gas_source.position.z;
+
+    source.color = gas_source.color;
+
+    source.pose.orientation = type_helper::DefaultOrientation::get();
+
+    return source;
+}
+
+visualization_msgs::msg::Marker getAsMarker(const CadModel &cad_model, int id)
+{
+    // CAD model in Collada (.dae) format
+    visualization_msgs::msg::Marker marker;
+    marker.ns = "cad_models"; //"part_" + std::to_string(id); // TODO Does every model need its own ns?
+    marker.id = id;
+    marker.type = visualization_msgs::msg::Marker::MESH_RESOURCE;
+    marker.action = visualization_msgs::msg::Marker::ADD;
+    marker.mesh_resource = "file://" + cad_model.path; //CAD_models[i];
+    marker.color = cad_model.color; //Color (Collada has no color)
+    marker.scale = type_helper::getVector3(1.0);
+    marker.pose.position = type_helper::getPoint(0.0);      //CAD models have the object pose within the file!
+    marker.pose.orientation = type_helper::DefaultOrientation::get();
+    return marker;
 }
 
 } // namespace gaden
