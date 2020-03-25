@@ -1,5 +1,5 @@
-#ifndef GADEN_ENVIRONMENT_TYPE_HELPER_H_INCLUDED
-#define GADEN_ENVIRONMENT_TYPE_HELPER_H_INCLUDED
+#ifndef GADEN_COMMON_ROS_TYPE_HELPER_H_INCLUDED
+#define GADEN_COMMON_ROS_TYPE_HELPER_H_INCLUDED
 
 #include <geometry_msgs/msg/point.hpp>
 #include <geometry_msgs/msg/quaternion.hpp>
@@ -10,7 +10,7 @@ namespace YAML {
 class Node;
 }
 
-namespace gaden::type_helper {
+namespace gaden::ros_type {
 
 std_msgs::msg::ColorRGBA getColorFromYaml(const YAML::Node &parent);
 
@@ -35,6 +35,6 @@ private:
     geometry_msgs::msg::Quaternion q;
 };
 
-} // namespace gaden::type_helper
+} // namespace gaden::ros_type
 
-#endif // GADEN_ENVIRONMENT_TYPE_HELPER_H_INCLUDED
+#endif // GADEN_COMMON_ROS_TYPE_HELPER_H_INCLUDED

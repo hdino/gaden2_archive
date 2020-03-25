@@ -1,0 +1,35 @@
+#ifndef GADEN_PREPROCESSING_STL_DATA_H_INCLUDED
+#define GADEN_PREPROCESSING_STL_DATA_H_INCLUDED
+
+#include <string>
+#include <vector>
+
+#include <boost/noncopyable.hpp>
+#include <Eigen/Core>
+
+#include "occupancy_grid_type.h"
+
+namespace gaden {
+
+struct StlFacet
+{
+    Eigen::Vector3f facet_normal;
+    Eigen::Vector3f vertex[3];
+};
+
+class StlData : private boost::noncopyable
+{
+public:
+    StlData(std::vector<StlFacet> &&facets);
+
+    bool hasData() const;
+
+    void addToOccupancyGrid(OccupancyGrid::Ptr &grid, double cell_size) const;
+
+private:
+    std::vector<StlFacet> facets_;
+};
+
+} // namespace gaden
+
+#endif // GADEN_PREPROCESSING_STL_DATA_H_INCLUDED

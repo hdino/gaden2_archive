@@ -35,11 +35,10 @@ int main( int argc, char** argv )
 
     for (size_t i = 0; i < config.cad_models.size(); ++i)
     {
-        visualization_msgs::msg::Marker marker = gaden::getAsMarker(config.cad_models[i], i);
-        marker.header.frame_id = config.fixed_frame;
-        marker.header.stamp = ros_node->get_clock()->now();
+        visualization_msgs::msg::Marker marker = gaden::getAsMarker(config.cad_models[i], i,
+                                                                    ros_node->get_clock()->now(),
+                                                                    config.fixed_frame);
 
-        //Add Marker to array
         cad_model_markers.markers.push_back(marker);
     }
 
@@ -59,11 +58,9 @@ int main( int argc, char** argv )
 
     for (size_t i = 0; i < config.gas_sources.size(); ++i)
     {
-        visualization_msgs::msg::Marker source = gaden::getAsMarker(config.gas_sources[i], i);
-        source.header.frame_id = config.fixed_frame;
-        source.header.stamp = ros_node->get_clock()->now();
-
-        //Add Marker to array
+        visualization_msgs::msg::Marker source = gaden::getAsMarker(config.gas_sources[i], i,
+                                                                    ros_node->get_clock()->now(),
+                                                                    config.fixed_frame);
         gas_source_markers.markers.push_back(source);
     }
 

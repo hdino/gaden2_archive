@@ -5,8 +5,9 @@
  * 2. Displays the Gas-Source Location as two cylinders.
  */
 
+#include <gaden_common/ros_parameters.h>
+#include <gaden_common/ros_type_helper.h>
 #include <gaden_environment/environment.h>
-#include <gaden_environment/type_helper.h>
 
 #include <rclcpp/rclcpp.hpp>
 #include <yaml-cpp/yaml.h>
@@ -18,25 +19,6 @@ namespace gaden {
 // ===============================//
 //      Load Node parameters      //
 // ===============================//
-
-bool getNodeParameter(std::shared_ptr<rclcpp::Node> &ros_node, const char *parameter_name, std::string &target)
-{
-    rclcpp::Parameter parameter;
-    if (!ros_node->get_parameter(parameter_name, parameter))
-    {
-        RCLCPP_ERROR_STREAM(ros_node->get_logger(),
-                            "Parameter " << parameter_name << " not defined.");
-        return false;
-    }
-    if (parameter.get_type() != rclcpp::ParameterType::PARAMETER_STRING)
-    {
-        RCLCPP_ERROR_STREAM(ros_node->get_logger(),
-                            "Parameter " << parameter_name << " type mismatch.");
-        return false;
-    }
-    target = parameter.as_string();
-    return true;
-}
 
 EnvironmentConfig loadEnvironmentConfig(std::shared_ptr<rclcpp::Node> &ros_node)
 {
@@ -63,27 +45,30 @@ EnvironmentConfig loadEnvironmentConfig(std::shared_ptr<rclcpp::Node> &ros_node)
     for (const YAML::Node &item : environment["gas_sources"])
     {
         GasSource gas_source;
-        gas_source.position = type_helper::getPositionFromYaml(item);
+        gas_source.position = ros_type::getPositionFromYaml(item);
         gas_source.scale = item["scale"].as<double>();
-        gas_source.color = type_helper::getColorFromYaml(item);
+        gas_source.color = ros_type::getColorFromYaml(item);
         config.gas_sources.push_back(gas_source);
     }
 
     // fill in CAD models
     for (const YAML::Node &item : environment["cad_models"])
     {
-        CadModel cad_model;
-        cad_model.path = base_path + item["path"].as<std::string>();
-        cad_model.color = type_helper::getColorFromYaml(item);
+        CadModel cad_model = getCadModelFromYaml(item, base_path);
         config.cad_models.push_back(cad_model);
     }
 
     return config;
 }
 
-visualization_msgs::msg::Marker getAsMarker(const GasSource &gas_source, int id)
+visualization_msgs::msg::Marker getAsMarker(const GasSource &gas_source, int id,
+                                            const builtin_interfaces::msg::Time &stamp,
+                                            const std::string &frame_id)
 {
     visualization_msgs::msg::Marker source;
+    source.header.stamp = stamp;
+    source.header.frame_id = frame_id;
+
     source.id = id;
     source.ns = "gas_sources";
     source.action = visualization_msgs::msg::Marker::ADD;
@@ -92,30 +77,14 @@ visualization_msgs::msg::Marker getAsMarker(const GasSource &gas_source, int id)
     source.pose.position = gas_source.position;
     source.pose.position.z *= 0.5;
 
-    source.scale = type_helper::getVector3(gas_source.scale);
+    source.scale = ros_type::getVector3(gas_source.scale);
     source.scale.z = gas_source.position.z;
 
     source.color = gas_source.color;
 
-    source.pose.orientation = type_helper::DefaultOrientation::get();
+    source.pose.orientation = ros_type::DefaultOrientation::get();
 
     return source;
-}
-
-visualization_msgs::msg::Marker getAsMarker(const CadModel &cad_model, int id)
-{
-    // CAD model in Collada (.dae) format
-    visualization_msgs::msg::Marker marker;
-    marker.ns = "cad_models"; //"part_" + std::to_string(id); // TODO Does every model need its own ns?
-    marker.id = id;
-    marker.type = visualization_msgs::msg::Marker::MESH_RESOURCE;
-    marker.action = visualization_msgs::msg::Marker::ADD;
-    marker.mesh_resource = "file://" + cad_model.path; //CAD_models[i];
-    marker.color = cad_model.color; //Color (Collada has no color)
-    marker.scale = type_helper::getVector3(1.0);
-    marker.pose.position = type_helper::getPoint(0.0);      //CAD models have the object pose within the file!
-    marker.pose.orientation = type_helper::DefaultOrientation::get();
-    return marker;
 }
 
 } // namespace gaden

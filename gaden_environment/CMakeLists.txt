@@ -4,6 +4,7 @@ project(gaden_environment)
 include(${CMAKE_CURRENT_SOURCE_DIR}/../common_config.cmake)
 
 # find dependencies
+find_package(gaden_common REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(tf2 REQUIRED)
 find_package(visualization_msgs REQUIRED)
@@ -12,7 +13,6 @@ find_package(yaml-cpp REQUIRED)
 add_executable(environment
   src/environment.cpp
   src/main.cpp
-  src/type_helper.cpp
 )
 
 target_include_directories(environment PUBLIC
@@ -21,10 +21,12 @@ target_include_directories(environment PUBLIC
 )
 
 target_link_libraries(environment
+  gaden_common::gaden_common
   yaml-cpp
 )
 
 ament_target_dependencies(environment
+  gaden_common
   rclcpp
   tf2
   visualization_msgs

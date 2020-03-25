@@ -1,8 +1,8 @@
-#include <gaden_environment/type_helper.h>
+#include <gaden_common/ros_type_helper.h>
 
 #include <yaml-cpp/yaml.h>
 
-namespace gaden::type_helper {
+namespace gaden::ros_type {
 
 std_msgs::msg::ColorRGBA getColorFromYaml(const YAML::Node &parent)
 {
@@ -60,4 +60,4 @@ DefaultOrientation::DefaultOrientation()
     q.w = 1.0;
 }
 
-} // namespace gaden::type_helper
+} // namespace gaden::ros_type
