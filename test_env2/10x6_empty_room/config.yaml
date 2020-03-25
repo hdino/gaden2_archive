@@ -1,0 +1,42 @@
+common:
+  environment:
+    - cad_model_path: cad_models/10x6_walls.stl
+      color: [0.92, 0.96, 0.96]
+  outlets:
+    - cad_model_path: cad_models/10x6_door_left.stl
+      color: [0.96, 0.17, 0.3]
+    - cad_model_path: cad_models/10x6_door_right.stl
+      color: [0.96, 0.17, 0.3]
+
+environment:
+  fixed_frame: "map"
+  cad_models:
+    - cad_model_path: cad_models/10x6_walls.dae
+      color: [0.92, 0.96, 0.96]
+    - cad_model_path: cad_models/10x6_door_left.dae
+      color: [0.96, 0.17, 0.3]
+    - cad_model_path: cad_models/10x6_door_right.dae
+      color: [0.96, 0.17, 0.3]
+  occupancy_file: "OccupancyGrid3D.csv"
+  gas_sources:
+    - position: [0.5, 3.0, 0.5]
+      scale: 0.2
+      color: [0.0, 1.0, 0.0]
+
+preprocessing:
+  cell_size: 0.1
+  wind_data_path: wind_simulations/dynamic/wind_at_cell_centers/
+  output_path: output # path to the csv file where we want to write the occupancy map
+
+#old_environment:
+#    ros__parameters:
+#        fixed_frame: "map"
+#        cad_models:
+#            - path: test1
+#            - path: test2          # this is not working
+#        some_int: 41
+#        log_severity: 1 #0-debug, 1-info, 2-Warn, 3-Error, 4-Fatal
+#        a_string: "Hello world"
+#        some_lists:
+#            some_integers: [1, 2, 3, 4]
+#            some_doubles : [3.14, 2.718]

@@ -5,19 +5,21 @@ import os
 import launch_ros.actions
 import pathlib
 
+scenario = '10x6_empty_room'
+
 def generate_launch_description():
-    launch_file_extension = '.launch.py'
+    #launch_file_extension = '.launch.py'
     
     # get the path of this file in the install folder
-    launch_file_path = pathlib.Path(__file__)
+    #launch_file_path = pathlib.Path(__file__)
     
-    launch_file_name = launch_file_path.name
-    if not launch_file_name.endswith(launch_file_extension):
-        raise RuntimeError('Name of launch file should end with .launch.py')
+    #launch_file_name = launch_file_path.name
+    #if not launch_file_name.endswith(launch_file_extension):
+    #    raise RuntimeError('Name of launch file should end with .launch.py')
     
     # the scenario name is the file name without its suffix
     # e.g.: scenario1.launch.py would become scenario1
-    scenario = launch_file_name[:-len(launch_file_extension)]
+    #scenario = launch_file_name[:-len(launch_file_extension)]
     
     # the following block transforms the path:
     # workspace/install/PACKAGE_NAME/share/PACKAGE_NAME/launch/THIS_FILE.launch.py
