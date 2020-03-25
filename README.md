@@ -5,6 +5,22 @@ GADEN is a simulation framework designed for mobile robotics systems and gas sen
 Moreover, it integrates the simulation of different environmental sensors, such as metal oxide gas sensors, photo-ionization 
 detectors, or anemometers, as well as it is fully integrated with ROS and the navigation stack, making testing and validation much easier. For further information and technical specifications, please see the project webpage at [http://mapir.isa.uma.es/work/gaden](http://mapir.isa.uma.es/work/gaden).
 
+## Installation
+
+### Cloning this repository
+
+Clone with the `--recurse-submodules` parameter:
+
+```
+git clone --recurse-submodules git@github.com:BAMresearch/gaden2.git
+```
+
+### Dependencies
+
+```
+sudo apt install libjemalloc-dev libblosc-dev
+```
+
 ## TEST_ENV
 Along with GADEN we also include in this repo a set of scenarios to help researchers to test and validate GADEN as well as their own algorithms (Gas Distribution Mapping, Gas Source Localization, etc.) in an easy way. To that end, the folder **test_env** contains multiple scenarios with pre-configured CAD models, wind-flow simulations and ROS-launch files that enable the user to easily start testing GADEN as well as their robotics solutions. Each scenario follows a similar structure:
 
