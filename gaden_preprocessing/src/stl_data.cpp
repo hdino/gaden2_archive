@@ -1,31 +1,40 @@
+#include <gaden_preprocessing/math_helper.h>
+#include <gaden_preprocessing/occupancy_grid.h>
 #include <gaden_preprocessing/stl_data.h>
 
+#include <array>
 #include <algorithm>
+#include <cmath>
 
 #include <iostream>
 
 namespace gaden {
 
-template <typename T>
-openvdb::Vec3i getCellCoordinates(const Eigen::Matrix<T, 3, 1> &vector, double cell_size)
+struct MinMaxVector
 {
-    Eigen::Matrix<T, 3, 1> temp = (vector / cell_size).array().floor();
-    return openvdb::Vec3i(temp[0], temp[1], temp[2]);
-}
-
-template <typename T>
-struct MinMax
-{
-    constexpr MinMax(T min_in, T max_in) : min(min_in), max(max_in) {}
-    T min;
-    T max;
+    openvdb::Vec3i min;
+    openvdb::Vec3i max;
 };
 
-template <typename T>
-constexpr MinMax<T> getMinMax(std::initializer_list<T> &&il)
+template <typename TContainer>
+MinMaxVector getElementWiseMinMax(const TContainer &input)
 {
-    return MinMax<T>(std::min(std::forward<std::initializer_list<T>>(il)),
-                     std::max(std::forward<std::initializer_list<T>>(il)));
+    auto min_max_x = std::minmax_element(input.begin(), input.end(),
+                                         [](const auto &a, const auto &b) { return a.x() < b.x(); });
+    auto min_max_y = std::minmax_element(input.begin(), input.end(),
+                                         [](const auto &a, const auto &b) { return a.y() < b.y(); });
+    auto min_max_z = std::minmax_element(input.begin(), input.end(),
+                                         [](const auto &a, const auto &b) { return a.z() < b.z(); });
+    MinMaxVector result;
+    result.min.x() = min_max_x.first->x();
+    result.min.y() = min_max_y.first->y();
+    result.min.z() = min_max_z.first->z();
+
+    result.max.x() = min_max_x.second->x();
+    result.max.y() = min_max_y.second->y();
+    result.max.z() = min_max_z.second->z();
+
+    return result;
 }
 
 StlData::StlData(std::vector<StlFacet> &&facets)
@@ -45,22 +54,35 @@ void StlData::addToOccupancyGrid(OccupancyGrid::Ptr &grid, double cell_size) con
 
     for (const StlFacet &facet : facets_)
     {
-        openvdb::Vec3i vertex_cell_coordinates[3];
-        vertex_cell_coordinates[0] = getCellCoordinates(facet.vertex[0], cell_size);
-        vertex_cell_coordinates[1] = getCellCoordinates(facet.vertex[1], cell_size);
-        vertex_cell_coordinates[2] = getCellCoordinates(facet.vertex[2], cell_size);
+        auto vertex_cell_coordinates = getCellCoordinates(facet.vertices, cell_size);
 
-        auto min_max_x = getMinMax({vertex_cell_coordinates[0].x(),
-                                    vertex_cell_coordinates[1].x(),
-                                    vertex_cell_coordinates[2].x()});
+        auto cell = getElementWiseMinMax(vertex_cell_coordinates);
 
-        auto min_max_y = getMinMax({vertex_cell_coordinates[0].y(),
-                                    vertex_cell_coordinates[1].y(),
-                                    vertex_cell_coordinates[2].y()});
+//        auto max_x = std::max({facet.vertex[0][0], facet.vertex[1][0], facet.vertex[2][0]});
+//        auto max_y = std::max({facet.vertex[0][1], facet.vertex[1][1], facet.vertex[2][1]});
+//        auto max_z = std::max({facet.vertex[0][2], facet.vertex[1][2], facet.vertex[2][2]});
 
-        auto min_max_z = getMinMax({vertex_cell_coordinates[0].z(),
-                                    vertex_cell_coordinates[1].z(),
-                                    vertex_cell_coordinates[2].z()});
+//        auto max_x_grid_deviation = std::fmod(max_x, cell_size);
+//        auto max_y_grid_deviation = std::fmod(max_y, cell_size);
+//        auto max_z_grid_deviation = std::fmod(max_z, cell_size);
+
+//        bool x_limit = Tolerant(max_x_grid_deviation) == 0 || Tolerant(max_x_grid_deviation) == cell_size;
+//        bool y_limit = Tolerant(max_y_grid_deviation) == 0 || Tolerant(max_y_grid_deviation) == cell_size;
+//        bool z_limit = Tolerant(max_z_grid_deviation) == 0 || Tolerant(max_z_grid_deviation) == cell_size;
+
+//        openvdb::Coord grid_coord(vertex_cell_coordinates[0]);
+
+//        if (    (x_limit && vertex_cell_coordinates[0].x() == min_max_cell_x.max)
+//             || (y_limit && vertex_cell_coordinates[0].y() == min_max_cell_y.max)
+//             || (z_limit && vertex_cell_coordinates[0].z() == min_max_cell_z.max)
+//             && !grid_accessor.getValue(grid_coord) == toUnderlying(Occupancy::Occupied))
+//        {
+//            grid_accessor.setValue(grid_coord) = 4; // TODO This value should have a name / assert that it's gone after preprocessing
+//        }
+//        else
+//            grid_accessor.setValue(grid_coord) = toUnderlying(Occupancy::Occupied);
+
+
     }
 }
 
@@ -93,8 +115,8 @@ void StlData::addToOccupancyGrid(OccupancyGrid::Ptr &grid, double cell_size) con
 //        int max_y = max_val(y1,y2,y3);
 //        int max_z = max_val(z1,z2,z3);
 
-//        bool isParallel =parallel(normals[i]);
-//        bool xLimit = eq(std::fmod(max_val(points[i][0][0],points[i][1][0],points[i][2][0])-env_min_x, cell_size),0)||eq(std::fmod(max_val(points[i][0][0],points[i][1][0],points[i][2][0])-env_min_x, cell_size),cell_size);
+//        bool xLimit = eq(std::fmod(max_val(points[i][0][0], points[i][1][0],points[i][2][0]) - env_min_x, cell_size), 0)
+//                    ||eq(std::fmod(max_val(points[i][0][0], points[i][1][0],points[i][2][0]) - env_min_x, cell_size), cell_size);
 //        bool yLimit = eq(std::fmod(max_val(points[i][0][1],points[i][1][1],points[i][2][1])-env_min_y, cell_size),0)||eq(std::fmod(max_val(points[i][0][1],points[i][1][1],points[i][2][1])-env_min_y, cell_size),cell_size);
 //        bool zLimit = eq(std::fmod(max_val(points[i][0][2],points[i][1][2],points[i][2][2])-env_min_z, cell_size),0)||eq(std::fmod(max_val(points[i][0][2],points[i][1][2],points[i][2][2])-env_min_z, cell_size),cell_size);
 
@@ -130,6 +152,8 @@ void StlData::addToOccupancyGrid(OccupancyGrid::Ptr &grid, double cell_size) con
 //                env[y3][x3][z3] = val;
 //            }
 //        }
+
+//        bool isParallel =parallel(normals[i]);
 
 //        for (int row = min_x; row <= max_x && row < env[0].size(); row++)
 //        {
@@ -267,40 +291,6 @@ void StlData::addToOccupancyGrid(OccupancyGrid::Ptr &grid, double cell_size) con
 
 
 
-
-
-
-
-
-//double min_val(double x, double y, double z) {
-
-//    double min = 99999;
-
-//    if (x < min)
-//        min=x;
-//    if (y < min)
-//        min=y;
-//    if(z < min)
-//        min=z;
-
-//    return min;
-//}
-//double max_val(double x, double y, double z) {
-
-//    double max = -99999;
-
-//    if (x > max)
-//        max=x;
-//    if (y > max)
-//        max=y;
-//    if(z > max)
-//        max=z;
-
-//    return max;
-//}
-//bool eq(double x, double y){
-//    return std::abs(x-y)<0.0001;
-//}
 
 //std::vector<Eigen::Vector3d> cubePoints(const Eigen::Vector3d &query_point){
 //    std::vector<Eigen::Vector3d> points;

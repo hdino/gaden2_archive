@@ -1,6 +1,7 @@
 #ifndef GADEN_PREPROCESSING_STL_DATA_H_INCLUDED
 #define GADEN_PREPROCESSING_STL_DATA_H_INCLUDED
 
+#include <array>
 #include <string>
 #include <vector>
 
@@ -13,8 +14,10 @@ namespace gaden {
 
 struct StlFacet
 {
-    Eigen::Vector3f facet_normal;
-    Eigen::Vector3f vertex[3];
+    //Eigen::Vector3f facet_normal;
+    //Eigen::Vector3f vertex[3];
+    openvdb::Vec3s facet_normal;
+    std::array<openvdb::Vec3s, 3> vertices;
 };
 
 class StlData : private boost::noncopyable

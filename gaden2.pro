@@ -3,6 +3,8 @@ CONFIG += console c++17
 CONFIG -= app_bundle
 CONFIG -= qt
 
+DEFINES += "__cplusplus=201703L"
+
 CONFIG += link_pkgconfig
 PKGCONFIG += eigen3
 

@@ -12,13 +12,23 @@
 
 namespace gaden {
 
+//template <typename T>
+//bool getFromStream(std::stringstream &stream, Eigen::Matrix<T, 3, 1> &vector)
+//{
+//    bool success = true;
+//    success &= static_cast<bool>(stream >> vector[0]);
+//    success &= static_cast<bool>(stream >> vector[1]);
+//    success &= static_cast<bool>(stream >> vector[2]);
+//    return success;
+//}
+
 template <typename T>
-bool getEigenVector3FromStream(std::stringstream &stream, Eigen::Matrix<T, 3, 1> &vector)
+bool getFromStream(std::stringstream &stream, openvdb::math::Vec3<T> &vector)
 {
     bool success = true;
-    success &= static_cast<bool>(stream >> vector[0]);
-    success &= static_cast<bool>(stream >> vector[1]);
-    success &= static_cast<bool>(stream >> vector[2]);
+    success &= static_cast<bool>(stream >> vector.x());
+    success &= static_cast<bool>(stream >> vector.y());
+    success &= static_cast<bool>(stream >> vector.z());
     return success;
 }
 
@@ -115,14 +125,14 @@ StlData readStlAscii(const std::string &filename, rclcpp::Logger logger)
             StlFacet facet;
             std::stringstream stream(line);
             stream.ignore(strlen("facet normal") + 1);
-            if (!getEigenVector3FromStream(stream, facet.facet_normal)) break;
+            if (!getFromStream(stream, facet.facet_normal)) break;
             if (!getLineAndSkipStart(file_stream, "outer loop", stream, logger)) break;
             if (!getLineAndSkipStart(file_stream, "vertex ", stream, logger)) break;
-            if (!getEigenVector3FromStream(stream, facet.vertex[0])) break;
+            if (!getFromStream(stream, facet.vertices[0])) break;
             if (!getLineAndSkipStart(file_stream, "vertex ", stream, logger)) break;
-            if (!getEigenVector3FromStream(stream, facet.vertex[1])) break;
+            if (!getFromStream(stream, facet.vertices[1])) break;
             if (!getLineAndSkipStart(file_stream, "vertex ", stream, logger)) break;
-            if (!getEigenVector3FromStream(stream, facet.vertex[2])) break;
+            if (!getFromStream(stream, facet.vertices[2])) break;
             if (!getLineAndSkipStart(file_stream, "endloop", stream, logger)) break;
             if (!getLineAndSkipStart(file_stream, "endfacet", stream, logger)) break;
 

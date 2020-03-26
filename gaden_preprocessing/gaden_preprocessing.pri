@@ -9,6 +9,7 @@ SOURCES += \
     $$PWD/src/stl_format.cpp
 
 HEADERS += \
+    $$PWD/include/gaden_preprocessing/math_helper.h \
     $$PWD/include/gaden_preprocessing/occupancy_grid.h \
     $$PWD/include/gaden_preprocessing/occupancy_grid_type.h \
     $$PWD/include/gaden_preprocessing/preprocessing.h \
