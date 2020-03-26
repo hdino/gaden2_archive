@@ -10,6 +10,7 @@ int main(int argc, char **argv)
     rclcpp::init(argc, argv);
     auto node_options = rclcpp::NodeOptions().automatically_declare_parameters_from_overrides(true);
     auto ros_node = std::make_shared<rclcpp::Node>("gaden_preprocessing", node_options);
+    rclcpp::Logger logger = ros_node->get_logger();
 
 //    //int numModels;
 //    ros::Publisher pub = nh.advertise<std_msgs::Bool>("preprocessing_done",5,true);
@@ -37,7 +38,13 @@ int main(int argc, char **argv)
 
     for (const gaden::CadModel &cad_model : config.environment_cad_models)
     {
-        gaden::StlData stl_data = gaden::readStlAscii(cad_model.path, ros_node->get_logger());
+        gaden::StlData stl_data = gaden::readStlAscii(cad_model.path, logger);
+        if (stl_data.isEmpty())
+        {
+            RCLCPP_ERROR_STREAM(logger, "CAD file " << cad_model.path
+                                << " invalid. Aborting.");
+            return 0;
+        }
         stl_data.addToOccupancyGrid(occupancy_grid, config.cell_size);
     }
 //    for (int i = 0; i < CADfiles.size(); i++)

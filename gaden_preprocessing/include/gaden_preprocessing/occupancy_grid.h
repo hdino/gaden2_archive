@@ -2,6 +2,7 @@
 #define GADEN_PREPROCESSING_OCCUPANCY_GRID_H_INCLUDED
 
 #include <array>
+#include <cmath>
 
 //#include <Eigen/Core>
 
@@ -39,6 +40,15 @@ getCellCoordinates(const std::array<openvdb::math::Vec3<T>, N> &continuous_coord
     for (size_t i = 0; i < N; ++i)
         cell_coordinates[i] = getCellCoordinates(continuous_coordinates[i], cell_size);
     return cell_coordinates;
+}
+
+template <typename T>
+openvdb::math::Vec3<T> getGridDeviation(const openvdb::math::Vec3<T> &continuous_coordinates,
+                                        double cell_size)
+{
+    return openvdb::math::Vec3<T>(std::fmod(continuous_coordinates.x(), cell_size),
+                                  std::fmod(continuous_coordinates.y(), cell_size),
+                                  std::fmod(continuous_coordinates.z(), cell_size));
 }
 
 } // namespace gaden

@@ -25,7 +25,7 @@ class StlData : private boost::noncopyable
 public:
     StlData(std::vector<StlFacet> &&facets);
 
-    bool hasData() const;
+    bool isEmpty() const;
 
     void addToOccupancyGrid(OccupancyGrid::Ptr &grid, double cell_size) const;
 

@@ -14,6 +14,7 @@ add_executable(preprocessing
   src/preprocessing.cpp
   src/stl_data.cpp
   src/stl_format.cpp
+  src/stl_to_grid.cpp
 )
 
 target_include_directories(preprocessing PUBLIC
