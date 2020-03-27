@@ -11,4 +11,14 @@
     } // namespace std
 #endif
 
+#include <string>
+
+#include <rclcpp/logger.hpp>
+
+namespace gaden {
+
+bool createDirectoriesIfNotExist(const std::string &path, rclcpp::Logger &logger);
+
+} // namespace gaden
+
 #endif // GADEN_COMMON_FILESYSTEM_H_INCLUDED

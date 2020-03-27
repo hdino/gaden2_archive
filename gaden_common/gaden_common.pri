@@ -3,6 +3,7 @@ DEPENDPATH += $$PWD
 
 SOURCES += \
     $$PWD/src/cad_model.cpp \
+    $$PWD/src/filesystem.cpp \
     $$PWD/src/ros_parameters.cpp \
     $$PWD/src/ros_type_helper.cpp
 

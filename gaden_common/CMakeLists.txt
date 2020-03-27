@@ -15,6 +15,7 @@ find_package(yaml-cpp REQUIRED)
 
 add_library(gaden_common
   src/cad_model.cpp
+  src/filesystem.cpp
   src/ros_parameters.cpp
   src/ros_type_helper.cpp
 )
