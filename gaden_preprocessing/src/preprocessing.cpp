@@ -36,7 +36,7 @@ PreprocessingConfig loadPreprocessingConfig(std::shared_ptr<rclcpp::Node> &ros_n
     std::cout << preprocessing << std::endl;
 
     config.cell_size = preprocessing["cell_size"].as<double>(); // TODO Default value 1.0?
-    config.output_path = preprocessing["output_path"].as<std::string>();
+    config.output_path = base_path + preprocessing["output_path"].as<std::string>();
 
     return config;
 }

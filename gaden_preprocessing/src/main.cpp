@@ -1,8 +1,11 @@
 #include <rclcpp/rclcpp.hpp>
 
+#include <gaden_common/filesystem.h>
 #include <gaden_preprocessing/occupancy_grid.h>
 #include <gaden_preprocessing/preprocessing.h>
 #include <gaden_preprocessing/stl_format.h>
+
+#include <openvdb/openvdb.h>
 
 int main(int argc, char **argv)
 {
@@ -16,6 +19,13 @@ int main(int argc, char **argv)
 //    ros::Publisher pub = nh.advertise<std_msgs::Bool>("preprocessing_done",5,true);
 
     auto config = gaden::loadPreprocessingConfig(ros_node);
+
+    if (!gaden::createDirectoriesIfNotExist(config.output_path, logger))
+    {
+        RCLCPP_ERROR_STREAM(logger, "Creation of output directory: "
+                            << config.output_path << " failed. Aborting.");
+        return 0;
+    }
 
 //    //stl file with the model of the outlets
 //    std::string outlet; int numOutletModels;
@@ -47,6 +57,9 @@ int main(int argc, char **argv)
         }
         stl_data.addToOccupancyGrid(occupancy_grid, config.cell_size);
     }
+
+
+
 //    for (int i = 0; i < CADfiles.size(); i++)
 //    {
 //        findDimensions(CADfiles[i]);
@@ -108,6 +121,10 @@ int main(int argc, char **argv)
 //    //output - path, occupancy vector, scale
 //    printEnv(boost::str(boost::format("%s/OccupancyGrid3D.csv") % output_path.c_str()), env, 1);
 //    printYaml(output_path);
+
+    std::string occupancy_grid_file = (std::filesystem::path(config.output_path) / "OccupancyGrid3D.csv").string();
+    RCLCPP_INFO_STREAM(logger, "Writing occupancy grid to: " << occupancy_grid_file);
+    openvdb::io::File(occupancy_grid_file).write({occupancy_grid});
 
 //    //-------------------------
 
