@@ -21,6 +21,15 @@ git clone --recurse-submodules git@github.com:BAMresearch/gaden2.git
 sudo apt install libjemalloc-dev libblosc-dev
 ```
 
+For building the OpenVDB Viewer one also needs `libglfw3-dev`.
+
+### Building GADEN 2
+
+Build including the OpenVDB Viewer:
+```
+colcon build --cmake-args -DOPENVDB_BUILD_VDB_VIEW=ON
+```
+
 ## TEST_ENV
 Along with GADEN we also include in this repo a set of scenarios to help researchers to test and validate GADEN as well as their own algorithms (Gas Distribution Mapping, Gas Source Localization, etc.) in an easy way. To that end, the folder **test_env** contains multiple scenarios with pre-configured CAD models, wind-flow simulations and ROS-launch files that enable the user to easily start testing GADEN as well as their robotics solutions. Each scenario follows a similar structure:
 
