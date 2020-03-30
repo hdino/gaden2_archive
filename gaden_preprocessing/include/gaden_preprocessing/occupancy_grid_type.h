@@ -13,6 +13,8 @@ using UInt8Grid = openvdb::Grid<UInt8Tree>;
 
 using OccupancyGrid = openvdb::Int32Grid;//open_vdb::UInt8Grid;
 
+enum class Occupancy : uint8_t { Free = 0, Occupied = 1, Outlet = 2 };
+
 } // namespace gaden
 
 #endif // GADEN_PREPROCESSING_OCCUPANCY_GRID_TYPE_H_INCLUDED

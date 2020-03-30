@@ -6,6 +6,7 @@
 #include <vector>
 
 #include <gaden_common/cad_model.h>
+#include <openvdb/Types.h>
 
 namespace rclcpp {
 class Node;
@@ -19,6 +20,7 @@ struct PreprocessingConfig
     std::string output_path; // path to the csv file where we want to write the occupancy map
     std::vector<CadModel> environment_cad_models;
     std::vector<CadModel> outlet_cad_models;
+    openvdb::Vec3d empty_point;
 };
 
 PreprocessingConfig loadPreprocessingConfig(std::shared_ptr<rclcpp::Node> &ros_node);

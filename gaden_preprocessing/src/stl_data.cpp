@@ -14,9 +14,11 @@ bool StlData::isEmpty() const
     return facets_.empty();
 }
 
-void StlData::addToOccupancyGrid(OccupancyGrid::Ptr &grid, double cell_size) const
+void StlData::addToOccupancyGrid(OccupancyGrid::Ptr &grid,
+                                 Occupancy occupancy_type,
+                                 double cell_size) const
 {
-    addStlToGrid(facets_, grid, cell_size);
+    addStlToGrid(facets_, grid, occupancy_type, cell_size);
 }
 
 } // namespace gaden

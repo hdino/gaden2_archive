@@ -12,12 +12,14 @@ using Vec3Bool = openvdb::math::Vec3<bool>;
 
 void addStlToGrid(const std::vector<StlFacet> &facets,
                   OccupancyGrid::Ptr &grid,
+                  Occupancy occupancy_type,
                   double cell_size);
 
 void processVertex(OccupancyGrid::Accessor &grid_accessor,
                    const openvdb::Vec3i &vertex_cell_coordinates,
                    const openvdb::Vec3i &max_vertex_cell_coordinates,
-                   const Vec3Bool &limit);
+                   const Vec3Bool &limit,
+                   Occupancy occupancy_type);
 
 bool isParallelToBasis(const openvdb::Vec3s &vector);
 

@@ -2,12 +2,15 @@
 #include <gaden_preprocessing/stl_to_grid.h>
 #include <gaden_preprocessing/vector_helper.h>
 
+#include <queue>
+
 #include <Eigen/Geometry>
 
 namespace gaden {
 
 void addStlToGrid(const std::vector<StlFacet> &facets,
                   OccupancyGrid::Ptr &grid,
+                  Occupancy occupancy_type,
                   double cell_size)
 {
     double cell_size_half = 0.5 * cell_size;
@@ -31,9 +34,9 @@ void addStlToGrid(const std::vector<StlFacet> &facets,
             Tolerant(continuous_max_grid_deviation.z()) == 0
                 || Tolerant(continuous_max_grid_deviation.z()) == cell_size);
 
-        processVertex(grid_accessor, vertex_cell_coordinates[0], cell.max, limit);
-        processVertex(grid_accessor, vertex_cell_coordinates[1], cell.max, limit);
-        processVertex(grid_accessor, vertex_cell_coordinates[2], cell.max, limit);
+        processVertex(grid_accessor, vertex_cell_coordinates[0], cell.max, limit, occupancy_type);
+        processVertex(grid_accessor, vertex_cell_coordinates[1], cell.max, limit, occupancy_type);
+        processVertex(grid_accessor, vertex_cell_coordinates[2], cell.max, limit, occupancy_type);
 
         openvdb::Vec3i xyz;
         for (xyz.x() = cell.min.x(); xyz.x() <= cell.max.x(); ++xyz.x())
@@ -50,7 +53,7 @@ void addStlToGrid(const std::vector<StlFacet> &facets,
                                           isParallelToBasis(facet.facet_normal),
                                           cell_size))
                     {
-                        processVertex(grid_accessor, xyz, cell.max, limit);
+                        processVertex(grid_accessor, xyz, cell.max, limit, occupancy_type);
                     }
                 }
     } // for (facet : facets)
@@ -65,19 +68,22 @@ void addStlToGrid(const std::vector<StlFacet> &facets,
 void processVertex(OccupancyGrid::Accessor &grid_accessor,
                    const openvdb::Vec3i &vertex_cell_coordinates,
                    const openvdb::Vec3i &max_vertex_cell_coordinates,
-                   const Vec3Bool &limit)
+                   const Vec3Bool &limit,
+                   Occupancy occupancy_type)
 {
     openvdb::Coord grid_coord(vertex_cell_coordinates);
+    auto occupancy_value = toUnderlying(occupancy_type);
 
     if ((    (limit.x() && vertex_cell_coordinates.x() == max_vertex_cell_coordinates.x())
           || (limit.y() && vertex_cell_coordinates.y() == max_vertex_cell_coordinates.y())
           || (limit.z() && vertex_cell_coordinates.z() == max_vertex_cell_coordinates.z()))
         && (grid_accessor.getValue(grid_coord) != toUnderlying(Occupancy::Occupied)))
     {
-        grid_accessor.setValue(grid_coord, 4); // TODO This value should have a name / assert that it's gone after preprocessing
+        // TODO
+        //if (occupancy_type == Occupancy::Occupied)
+        //    occupancy_value = 4; // TODO Value 4 should have a name / assert that it's gone after preprocessing
     }
-    else
-        grid_accessor.setValue(grid_coord, toUnderlying(Occupancy::Occupied));
+    grid_accessor.setValue(grid_coord, occupancy_value);
 }
 
 bool isParallelToBasis(const openvdb::Vec3s &vector)
@@ -177,6 +183,74 @@ bool planeIntersects(const Eigen::Vector3d &n,
     }
     return !all_positive && !all_negative;
 }
+
+//void fillStlGrid(openvdb::Vec3i empty_point, OccupancyGrid::Ptr &grid, int val, int empty)
+//{
+//    auto grid_accessor = grid->getAccessor();
+
+//    std::queue<openvdb::Vec3i> q;
+//    q.push(empty_point);
+
+//    //env[x][y][1]=val;
+//    openvdb::Coord grid_coord(empty_point.x(), empty_point.y(), 1);
+//    grid_accessor.setValue(grid_coord, val);
+
+//    while(!q.empty())
+//    {
+//        openvdb::Vec3i point = q.front();
+//        q.pop();
+//        if(point[0]+1<env.size()&&env[point[0]+1][point[1]][point[2]]==empty){ // x+1, y, z
+//            env[point[0]+1][point[1]][point[2]]=val;
+//            q.push(Eigen::Vector3i(point[0]+1,point[1],point[2]));
+//        }
+//        if(point[0]>0&&env[point[0]-1][point[1]][point[2]]==empty){ //x-1, y, z
+//            env[point[0]-1][point[1]][point[2]]=val;
+//            q.push(Eigen::Vector3i(point[0]-1,point[1],point[2]));
+//        }
+//        if(point[1]+1<env[0].size()&&env[point[0]][point[1]+1][point[2]]==empty){ //x, y+1, z
+//            env[point[0]][point[1]+1][point[2]]=val;
+//            q.push(Eigen::Vector3i(point[0],point[1]+1,point[2]));
+//        }
+//        if(point[1]>0&&env[point[0]][point[1]-1][point[2]]==empty){ //x, y-1, z
+//            env[point[0]][point[1]-1][point[2]]=val;
+//            q.push(Eigen::Vector3i(point[0],point[1]-1,point[2]));
+//        }
+//        if(point[2]+1<env[0][0].size()&&env[point[0]][point[1]][point[2]+1]==empty){ //x, y, z+1
+//            env[point[0]][point[1]][point[2]+1]=val;
+//            q.push(Eigen::Vector3i(point[0],point[1],point[2]+1));
+//        }
+//        if(point[2]>0&&env[point[0]][point[1]][point[2]-1]==empty){ //x, y, z-1
+//            env[point[0]][point[1]][point[2]-1]=val;
+//            q.push(Eigen::Vector3i(point[0],point[1],point[2]-1));
+//        }
+//    }
+//}
+
+//void clean(std::vector<std::vector<std::vector<int> > >& env){
+//    std::stack<Eigen::Vector3i> st;
+//    for(int col=0;col<env.size();col++){
+//        for(int row=0;row<env[0].size();row++){
+//            for(int height=0;height<env[0][0].size();height++){
+//                if(env[col][row][height]==4){
+//                    if((col<env.size()-1&&env[col+1][row][height]==3)||
+//                            (row<env[0].size()-1&&env[col][row+1][height]==3)||
+//                            (height<env[0][0].size()-1&&env[col][row][height+1]==3)||
+//                            (col<env.size()-1&&row<env[0].size()-1&&env[col+1][row+1][height]==3
+//                                &&env[col][row+1][height]==4
+//                                &&env[col+1][row][height]==4))
+//                    {
+//                        env[col][row][height]=3;
+//                    }else
+//                    {
+//                        env[col][row][height]=1;
+//                    }
+
+//                }
+
+//            }
+//        }
+//    }
+//}
 
 } // namespace gaden
 

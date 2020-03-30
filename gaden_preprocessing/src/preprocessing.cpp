@@ -6,6 +6,16 @@
 
 namespace gaden {
 
+template <typename T>
+openvdb::math::Vec3<T> getOpenVdbVec3FromYaml(const YAML::Node &sequence)
+{
+    openvdb::math::Vec3<T> vector;
+    vector.x() = sequence[0].as<T>();
+    vector.y() = sequence[1].as<T>();
+    vector.z() = sequence[2].as<T>();
+    return vector;
+}
+
 PreprocessingConfig loadPreprocessingConfig(std::shared_ptr<rclcpp::Node> &ros_node)
 {
     PreprocessingConfig config;
@@ -37,6 +47,7 @@ PreprocessingConfig loadPreprocessingConfig(std::shared_ptr<rclcpp::Node> &ros_n
 
     config.cell_size = preprocessing["cell_size"].as<double>(); // TODO Default value 1.0?
     config.output_path = base_path + preprocessing["output_path"].as<std::string>();
+    config.empty_point = getOpenVdbVec3FromYaml<double>(preprocessing["empty_point"]);
 
     return config;
 }
@@ -176,64 +187,4 @@ PreprocessingConfig loadPreprocessingConfig(std::shared_ptr<rclcpp::Node> &ros_n
 //		}
 //	}
 //    printWind(U,V,W,filename);
-//}
-
-//void fill(int x, int y, int z, std::vector<std::vector<std::vector<int> > >& env, int val, int empty){
-//    std::queue<Eigen::Vector3i> q;
-//    q.push(Eigen::Vector3i(x, y, z));
-//    env[x][y][1]=val;
-//    while(!q.empty()){
-//        Eigen::Vector3i point = q.front();
-//        q.pop();
-//        if(point[0]+1<env.size()&&env[point[0]+1][point[1]][point[2]]==empty){ // x+1, y, z
-//            env[point[0]+1][point[1]][point[2]]=val;
-//            q.push(Eigen::Vector3i(point[0]+1,point[1],point[2]));
-//        }
-//        if(point[0]>0&&env[point[0]-1][point[1]][point[2]]==empty){ //x-1, y, z
-//            env[point[0]-1][point[1]][point[2]]=val;
-//            q.push(Eigen::Vector3i(point[0]-1,point[1],point[2]));
-//        }
-//        if(point[1]+1<env[0].size()&&env[point[0]][point[1]+1][point[2]]==empty){ //x, y+1, z
-//            env[point[0]][point[1]+1][point[2]]=val;
-//            q.push(Eigen::Vector3i(point[0],point[1]+1,point[2]));
-//        }
-//        if(point[1]>0&&env[point[0]][point[1]-1][point[2]]==empty){ //x, y-1, z
-//            env[point[0]][point[1]-1][point[2]]=val;
-//            q.push(Eigen::Vector3i(point[0],point[1]-1,point[2]));
-//        }
-//        if(point[2]+1<env[0][0].size()&&env[point[0]][point[1]][point[2]+1]==empty){ //x, y, z+1
-//            env[point[0]][point[1]][point[2]+1]=val;
-//            q.push(Eigen::Vector3i(point[0],point[1],point[2]+1));
-//        }
-//        if(point[2]>0&&env[point[0]][point[1]][point[2]-1]==empty){ //x, y, z-1
-//            env[point[0]][point[1]][point[2]-1]=val;
-//            q.push(Eigen::Vector3i(point[0],point[1],point[2]-1));
-//        }
-//    }
-//}
-
-//void clean(std::vector<std::vector<std::vector<int> > >& env){
-//    std::stack<Eigen::Vector3i> st;
-//    for(int col=0;col<env.size();col++){
-//        for(int row=0;row<env[0].size();row++){
-//            for(int height=0;height<env[0][0].size();height++){
-//                if(env[col][row][height]==4){
-//                    if((col<env.size()-1&&env[col+1][row][height]==3)||
-//                            (row<env[0].size()-1&&env[col][row+1][height]==3)||
-//                            (height<env[0][0].size()-1&&env[col][row][height+1]==3)||
-//                            (col<env.size()-1&&row<env[0].size()-1&&env[col+1][row+1][height]==3
-//                                &&env[col][row+1][height]==4
-//                                &&env[col+1][row][height]==4))
-//                    {
-//                        env[col][row][height]=3;
-//                    }else
-//                    {
-//                        env[col][row][height]=1;
-//                    }
-                    
-//                }
-                
-//            }
-//        }
-//    }
 //}

@@ -5,12 +5,14 @@ include(${CMAKE_CURRENT_SOURCE_DIR}/../common_config.cmake)
 
 # find dependencies
 find_package(gaden_common REQUIRED)
+find_package(PNG REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(yaml-cpp REQUIRED)
 
 add_executable(preprocessing
   src/main.cpp
   src/occupancy_grid.cpp
+  src/png_exporter.cpp
   src/preprocessing.cpp
   src/stl_data.cpp
   src/stl_format.cpp
@@ -24,6 +26,7 @@ target_include_directories(preprocessing PUBLIC
 
 target_link_libraries(preprocessing
   gaden_common::gaden_common
+  PNG::PNG
   yaml-cpp
 )
 

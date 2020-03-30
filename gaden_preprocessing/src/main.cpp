@@ -2,6 +2,7 @@
 
 #include <gaden_common/filesystem.h>
 #include <gaden_preprocessing/occupancy_grid.h>
+#include <gaden_preprocessing/png_exporter.h>
 #include <gaden_preprocessing/preprocessing.h>
 #include <gaden_preprocessing/stl_format.h>
 
@@ -55,7 +56,7 @@ int main(int argc, char **argv)
                                 << " invalid. Aborting.");
             return 0;
         }
-        stl_data.addToOccupancyGrid(occupancy_grid, config.cell_size);
+        stl_data.addToOccupancyGrid(occupancy_grid, gaden::Occupancy::Occupied, config.cell_size);
     }
 
 
@@ -99,6 +100,18 @@ int main(int argc, char **argv)
 
 //    //--------------------------
 
+    for (const gaden::CadModel &cad_model : config.outlet_cad_models)
+    {
+        gaden::StlData stl_data = gaden::readStlAscii(cad_model.path, logger);
+        if (stl_data.isEmpty())
+        {
+            RCLCPP_ERROR_STREAM(logger, "CAD file " << cad_model.path
+                                << " invalid. Aborting.");
+            return 0;
+        }
+        stl_data.addToOccupancyGrid(occupancy_grid, gaden::Occupancy::Outlet, config.cell_size);
+    }
+
 //    private_nh.param<int>("number_of_outlet_models", numOutletModels, 1); // number of CAD models
 
 //    std::vector<std::string> outletFiles;
@@ -121,6 +134,10 @@ int main(int argc, char **argv)
 //    //output - path, occupancy vector, scale
 //    printEnv(boost::str(boost::format("%s/OccupancyGrid3D.csv") % output_path.c_str()), env, 1);
 //    printYaml(output_path);
+
+    std::string occupancy_png_file = (std::filesystem::path(config.output_path) / "occupancy.png").string();
+    RCLCPP_INFO_STREAM(logger, "Saving environment as PNG to " << occupancy_png_file);
+    gaden::exportPng(occupancy_grid, occupancy_png_file, logger, 10);
 
     std::string occupancy_grid_file = (std::filesystem::path(config.output_path) / "OccupancyGrid3D.csv").string();
     RCLCPP_INFO_STREAM(logger, "Writing occupancy grid to: " << occupancy_grid_file);

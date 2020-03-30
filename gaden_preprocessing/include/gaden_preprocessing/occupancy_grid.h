@@ -10,8 +10,6 @@
 
 namespace gaden {
 
-enum class Occupancy : uint8_t { Free = 0, Occupied = 1, Outlet = 2 };
-
 OccupancyGrid::Ptr createGrid();
 
 //template <typename T>

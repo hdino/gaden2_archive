@@ -27,7 +27,9 @@ public:
 
     bool isEmpty() const;
 
-    void addToOccupancyGrid(OccupancyGrid::Ptr &grid, double cell_size) const;
+    void addToOccupancyGrid(OccupancyGrid::Ptr &grid,
+                            Occupancy occupancy_type,
+                            double cell_size) const;
 
 private:
     std::vector<StlFacet> facets_;
