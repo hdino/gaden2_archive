@@ -18,7 +18,7 @@ git clone --recurse-submodules git@github.com:BAMresearch/gaden2.git
 ### Dependencies
 
 ```
-sudo apt install libjemalloc-dev libblosc-dev
+sudo apt install libjemalloc-dev libblosc-dev libpng++-dev
 ```
 
 For building the OpenVDB Viewer one also needs `libglfw3-dev`.
