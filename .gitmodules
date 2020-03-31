@@ -1,3 +1,6 @@
 [submodule "third-party/OpenVDB"]
 	path = third-party/OpenVDB
 	url = https://github.com/AcademySoftwareFoundation/openvdb.git
+[submodule "third-party/rl_logging"]
+	path = third-party/rl_logging
+	url = https://github.com/BAMresearch/rl_logging.git
