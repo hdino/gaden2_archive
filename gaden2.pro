@@ -14,4 +14,5 @@ INCLUDEPATH += \
 
 include(gaden_common/gaden_common.pri)
 include(gaden_environment/gaden_environment.pri)
+include(gaden_filament_simulator/gaden_filament_simulator.pri)
 include(gaden_preprocessing/gaden_preprocessing.pri)
