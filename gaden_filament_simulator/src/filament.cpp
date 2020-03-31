@@ -9,7 +9,7 @@
  ---------------------------------------------------------------------------------------*/
 
 
-#include "filament_simulator/filament.h"
+#include <gaden_filament_simulator/filament.h>
 
 //Default Constructor
 CFilament::CFilament()
