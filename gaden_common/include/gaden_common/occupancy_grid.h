@@ -1,8 +1,9 @@
-#ifndef GADEN_PREPROCESSING_OCCUPANCY_GRID_H_INCLUDED
-#define GADEN_PREPROCESSING_OCCUPANCY_GRID_H_INCLUDED
+#ifndef GADEN_COMMON_OCCUPANCY_GRID_H_INCLUDED
+#define GADEN_COMMON_OCCUPANCY_GRID_H_INCLUDED
 
 #include <array>
 #include <cmath>
+#include <string>
 
 //#include <Eigen/Core>
 
@@ -11,6 +12,8 @@
 namespace gaden {
 
 OccupancyGrid::Ptr createGrid();
+
+OccupancyGrid::Ptr loadGridFromFile(const std::string &filename);
 
 //template <typename T>
 //openvdb::Vec3i getCellCoordinates(const Eigen::Matrix<T, 3, 1> &vector, double cell_size)
@@ -51,4 +54,4 @@ openvdb::math::Vec3<T> getGridDeviation(const openvdb::math::Vec3<T> &continuous
 
 } // namespace gaden
 
-#endif // GADEN_PREPROCESSING_OCCUPANCY_GRID_H_INCLUDED
+#endif // GADEN_COMMON_OCCUPANCY_GRID_H_INCLUDED

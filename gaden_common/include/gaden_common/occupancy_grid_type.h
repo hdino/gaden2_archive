@@ -1,5 +1,5 @@
-#ifndef GADEN_PREPROCESSING_OCCUPANCY_GRID_TYPE_H_INCLUDED
-#define GADEN_PREPROCESSING_OCCUPANCY_GRID_TYPE_H_INCLUDED
+#ifndef GADEN_COMMON_OCCUPANCY_GRID_TYPE_H_INCLUDED
+#define GADEN_COMMON_OCCUPANCY_GRID_TYPE_H_INCLUDED
 
 #include <openvdb/openvdb.h>
 #include <openvdb/Grid.h>
@@ -17,4 +17,4 @@ enum class Occupancy : uint8_t { Free = 0, Occupied = 1, Outlet = 2 };
 
 } // namespace gaden
 
-#endif // GADEN_PREPROCESSING_OCCUPANCY_GRID_TYPE_H_INCLUDED
+#endif // GADEN_COMMON_OCCUPANCY_GRID_TYPE_H_INCLUDED
