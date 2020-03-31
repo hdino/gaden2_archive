@@ -3,7 +3,8 @@
 
 #include <vector>
 
-#include "occupancy_grid.h"
+#include <gaden_common/occupancy_grid.h>
+
 #include "stl_data.h"
 
 namespace gaden {

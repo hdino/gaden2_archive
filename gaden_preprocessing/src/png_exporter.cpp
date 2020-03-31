@@ -1,3 +1,4 @@
+#include <gaden_common/multidim_vector.h>
 #include <gaden_preprocessing/png_exporter.h>
 
 #include <vector>
@@ -33,8 +34,9 @@ void exportPng(OccupancyGrid::Ptr &grid, const std::string &png_file,
 
     // We use a vector of vectors for interim storage of the top view data
     enum class Occupancy2D { Free, OccupiedGround, OccupiedAboveGround, Outlet };
-    std::vector<std::vector<Occupancy2D>> data;
-    data.resize(env_dimension.y(), std::vector<Occupancy2D>(env_dimension.x(), Occupancy2D::Free));
+    //std::vector<std::vector<Occupancy2D>> data;
+    //data.resize(env_dimension.y(), std::vector<Occupancy2D>(env_dimension.x(), Occupancy2D::Free));
+    gaden::Vector2D data(env_dimension.y(), env_dimension.x(), Occupancy2D::Free);
     // Note to access the vectors in correct order: data[y][x]
 
     // Iterate over all values in the grid that are "on",

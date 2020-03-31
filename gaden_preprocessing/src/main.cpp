@@ -1,7 +1,7 @@
 #include <rclcpp/rclcpp.hpp>
 
 #include <gaden_common/filesystem.h>
-#include <gaden_preprocessing/occupancy_grid.h>
+#include <gaden_common/occupancy_grid.h>
 #include <gaden_preprocessing/png_exporter.h>
 #include <gaden_preprocessing/preprocessing.h>
 #include <gaden_preprocessing/stl_format.h>
@@ -139,7 +139,7 @@ int main(int argc, char **argv)
     RCLCPP_INFO_STREAM(logger, "Saving environment as PNG to " << occupancy_png_file);
     gaden::exportPng(occupancy_grid, occupancy_png_file, logger, 10);
 
-    std::string occupancy_grid_file = (std::filesystem::path(config.output_path) / "OccupancyGrid3D.csv").string();
+    std::string occupancy_grid_file = (std::filesystem::path(config.output_path) / "OccupancyGrid.vdb").string();
     RCLCPP_INFO_STREAM(logger, "Writing occupancy grid to: " << occupancy_grid_file);
     openvdb::io::File(occupancy_grid_file).write({occupancy_grid});
 

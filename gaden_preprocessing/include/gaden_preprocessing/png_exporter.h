@@ -5,7 +5,7 @@
 
 #include <rclcpp/logger.hpp>
 
-#include "occupancy_grid_type.h"
+#include <gaden_common/occupancy_grid_type.h>
 
 namespace gaden {
 
