@@ -17,7 +17,7 @@ environment:
       color: [0.96, 0.17, 0.3]
     - cad_model_path: cad_models/10x6_door_right.dae
       color: [0.96, 0.17, 0.3]
-  occupancy_file: "OccupancyGrid3D.csv"
+  occupancy_file: "output/OccupancyGrid.vdb"
   gas_sources:
     - position: [0.5, 3.0, 0.5]
       scale: 0.2
@@ -25,7 +25,8 @@ environment:
 
 preprocessing:
   cell_size: 0.1
-  wind_data_path: wind_simulations/dynamic/wind_at_cell_centers/
+  # Wind Data (the node will append _i.csv to the name that is specified here)
+  wind_data_path: wind_simulations/dynamic/wind_at_cell_centers
   output_path: output # path to the csv file where we want to write the occupancy map
   empty_point: [1.0, 1.0, 0.5] # Location of a point in free-space [x [m], y [m], z [m]]
 
