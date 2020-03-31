@@ -16,6 +16,8 @@ find_package(yaml-cpp REQUIRED)
 add_library(gaden_common
   src/cad_model.cpp
   src/filesystem.cpp
+  src/gaden1_occupancy_grid_importer.cpp
+  src/occupancy_grid.cpp
   src/ros_parameters.cpp
   src/ros_type_helper.cpp
 )
