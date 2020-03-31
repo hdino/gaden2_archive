@@ -40,6 +40,7 @@ EnvironmentConfig loadEnvironmentConfig(std::shared_ptr<rclcpp::Node> &ros_node)
     std::cout << environment << std::endl;
 
     config.fixed_frame = environment["fixed_frame"].as<std::string>();
+    config.occupancy_grid_file = base_path + environment["occupancy_file"].as<std::string>();
 
     // fill in gas sources
     for (const YAML::Node &item : environment["gas_sources"])

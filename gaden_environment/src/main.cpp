@@ -1,3 +1,4 @@
+#include <gaden_common/occupancy_grid.h>
 #include <gaden_environment/environment.h>
 
 #include <rclcpp/rclcpp.hpp>
@@ -47,6 +48,10 @@ int main( int argc, char** argv )
     //Display Environment as an array of Cube markers (Rviz)
     //visualization_msgs::MarkerArray environment;
     visualization_msgs::msg::MarkerArray environment;
+    if (!config.occupancy_grid_file.empty())
+    {
+        gaden::OccupancyGrid::Ptr occupancy_grid = gaden::loadGridFromFile(config.occupancy_grid_file);
+    }
 //    if (!occupancy3D_data.empty())
 //        loadEnvironment(environment);
 

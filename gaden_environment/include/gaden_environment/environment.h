@@ -25,6 +25,7 @@ struct GasSource
 struct EnvironmentConfig
 {
     std::string fixed_frame;
+    std::string occupancy_grid_file;
     std::vector<GasSource> gas_sources;
     std::vector<CadModel> cad_models;
 };
