@@ -5,6 +5,7 @@
 #include <string>
 #include <vector>
 
+#include <rl_logging/logging_interface.hpp>
 #include <visualization_msgs/msg/marker.hpp>
 
 #include <gaden_common/cad_model.h>
@@ -30,7 +31,8 @@ struct EnvironmentConfig
     std::vector<CadModel> cad_models;
 };
 
-EnvironmentConfig loadEnvironmentConfig(std::shared_ptr<rclcpp::Node> &ros_node);
+EnvironmentConfig loadEnvironmentConfig(std::shared_ptr<rclcpp::Node> &ros_node,
+                                        rl::Logger &log);
 
 visualization_msgs::msg::Marker getAsMarker(const GasSource &gas_source, int id,
                                             const builtin_interfaces::msg::Time &stamp,

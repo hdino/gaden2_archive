@@ -1,7 +1,9 @@
 #include <gaden_common/occupancy_grid.h>
 #include <gaden_environment/environment.h>
+#include <gaden_environment/grid_to_marker.h>
 
 #include <rclcpp/rclcpp.hpp>
+#include <rl_logging/ros2_logging.hpp>
 #include <visualization_msgs/msg/marker_array.hpp>
 
 // ===============================//
@@ -13,9 +15,10 @@ int main( int argc, char** argv )
     rclcpp::init(argc, argv);
     auto node_options = rclcpp::NodeOptions().automatically_declare_parameters_from_overrides(true);
     auto ros_node = std::make_shared<rclcpp::Node>("environment", node_options);
+    rl::Logger log = rl::logging::Ros2Logger::create(ros_node->get_logger());
 
     //Load Parameters
-    auto config = gaden::loadEnvironmentConfig(ros_node);
+    auto config = gaden::loadEnvironmentConfig(ros_node, log);
 
     // Publishers
     auto gas_source_publisher = ros_node->create_publisher<
@@ -28,6 +31,17 @@ int main( int argc, char** argv )
     // Subscribers
 //    preprocessing_done = false;
 //    ros::Subscriber sub = n.subscribe("preprocessing_done", 1, PreprocessingCB);
+
+    //    // Wait for the GADEN_preprocessin node to finish?
+    //    if( wait_preprocessing )
+    //    {
+    //        while(ros::ok() && !preprocessing_done)
+    //        {
+    //            ros::Duration(0.5).sleep();
+    //            ros::spinOnce();
+    //            if (verbose) ROS_INFO("[environment] Waiting for node GADEN_preprocessing to end.");
+    //        }
+    //	}
 
 
     // 1. ENVIRONMNET AS CAD MODELS
@@ -48,9 +62,15 @@ int main( int argc, char** argv )
     //Display Environment as an array of Cube markers (Rviz)
     //visualization_msgs::MarkerArray environment;
     visualization_msgs::msg::MarkerArray environment;
+    gaden::OccupancyGrid::Ptr occupancy_grid;
     if (!config.occupancy_grid_file.empty())
     {
-        gaden::OccupancyGrid::Ptr occupancy_grid = gaden::loadGridFromFile(config.occupancy_grid_file);
+        occupancy_grid = gaden::loadGridFromFile(config.occupancy_grid_file, log);
+        if (occupancy_grid)
+            environment = gaden::getAsMarkerArray(occupancy_grid,
+                                                  ros_node->get_clock()->now(),
+                                                  config.fixed_frame,
+                                                  log);
     }
 //    if (!occupancy3D_data.empty())
 //        loadEnvironment(environment);
@@ -82,8 +102,8 @@ int main( int argc, char** argv )
         environment_cad_publisher->publish(cad_model_markers);
 
         // Publish 3D Occupancy
-//        if (!occupancy3D_data.empty())
-//            environment_publisher->publish(environment);
+        if (occupancy_grid)
+            environment_publisher->publish(environment);
 
         //Publish Gas Sources
         gas_source_publisher->publish(gas_source_markers);
