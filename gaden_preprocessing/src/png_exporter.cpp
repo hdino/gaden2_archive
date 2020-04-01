@@ -4,14 +4,13 @@
 #include <vector>
 
 #include <png++/png.hpp>
-#include <rclcpp/logging.hpp>
 
-#include <iostream>
 #include <openvdb/Types.h>
+
 namespace gaden {
 
 void exportPng(OccupancyGrid::Ptr &grid, const std::string &png_file,
-               rclcpp::Logger &logger, unsigned scale)
+               rl::Logger &logger, unsigned scale)
 {
     // The PNG file is created in two steps:
     // 1) An unscaled 2D matrix is filled with the top view data
@@ -23,8 +22,7 @@ void exportPng(OccupancyGrid::Ptr &grid, const std::string &png_file,
     openvdb::Vec3i env_dimension_signed = grid->evalActiveVoxelDim().asVec3i();
     if (env_dimension_signed.x() < 0 || env_dimension_signed.y() < 0)
     {
-        RCLCPP_ERROR(logger, "Environment has negative dimension. "
-                             "Cannot export PNG.");
+        logger.error("Environment has negative dimension. Cannot export PNG.");
         return;
     }
     openvdb::math::Vec3<size_t> env_dimension = env_dimension_signed; // cast to unsigned type
@@ -77,9 +75,9 @@ void exportPng(OccupancyGrid::Ptr &grid, const std::string &png_file,
             }
             else
             {
-                RCLCPP_ERROR_STREAM(logger, "Occupancy map has invalid value at"
-                                    <<" x=" << x << " y=" << y << " z=" << z
-                                    << " : " << grid_value);
+                logger.warn() << "Occupancy map has invalid value at"
+                              <<" x=" << x << " y=" << y << " z=" << z
+                              << " : " << grid_value;
                 continue;
             }
         }
@@ -87,14 +85,14 @@ void exportPng(OccupancyGrid::Ptr &grid, const std::string &png_file,
         {
             openvdb::CoordBBox bbox;
             it.getBoundingBox(bbox);
-            RCLCPP_WARN(logger, "Grid tiles are not supported, yet");
+            logger.warn("Grid tiles are not supported, yet");
         }
     }
 
     // Create, fill and save image
     openvdb::math::Vec3<size_t> image_dimension = scale * env_dimension;
-    RCLCPP_INFO_STREAM(logger, "Scale: " << scale << " PNG dimension: "
-                       << image_dimension.str());
+    logger.info() << "Scale: " << scale << " PNG dimension: "
+                  << image_dimension.str();
 
     png::image<png::rgb_pixel> image(image_dimension.x(), image_dimension.y());
 

@@ -1,5 +1,7 @@
 #include <iostream>
 
+#include <rl_logging/std_logging.hpp>
+
 #include <gaden_common/gaden1_occupancy_grid_importer.h>
 
 int main(int argc, char **argv)
@@ -11,10 +13,12 @@ int main(int argc, char **argv)
         return 0;
     }
 
-    gaden::OccupancyGrid::Ptr grid = gaden::importOccupancyGridFromGaden1(argv[1]);
-    if (grid->empty())
+    rl::Logger logger = rl::logging::StdLogger::create("GadenOccupancyConverter");
+
+    gaden::OccupancyGrid::Ptr grid = gaden::importOccupancyGridFromGaden1(argv[1], logger);
+    if (!grid || grid->empty())
     {
-        std::cout << "Importing occupancy grid from " << argv[1] << " failed." << std::endl;
+        logger.error() << "Importing occupancy grid from " << argv[1] << " failed.";
         return 0;
     }
 

@@ -3,13 +3,13 @@
 
 #include <string>
 
-#include <rclcpp/logger.hpp>
+#include <rl_logging/logging_interface.hpp>
 
 #include "stl_data.h"
 
 namespace gaden {
 
-StlData readStlAscii(const std::string &filename, rclcpp::Logger logger);
+StlData readStlAscii(const std::string &filename, rl::Logger &logger);
 
 } // namespace gaden
 

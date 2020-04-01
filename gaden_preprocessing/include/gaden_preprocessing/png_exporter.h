@@ -3,7 +3,7 @@
 
 #include <string>
 
-#include <rclcpp/logger.hpp>
+#include <rl_logging/logging_interface.hpp>
 
 #include <gaden_common/occupancy_grid_type.h>
 
@@ -19,7 +19,7 @@ namespace gaden {
  *     red:   outlet (not distinguished between ground cell and others)
 **/
 void exportPng(OccupancyGrid::Ptr &grid, const std::string &png_file,
-               rclcpp::Logger &logger, unsigned scale = 1);
+               rl::Logger &logger, unsigned scale = 1);
 
 } // namespace gaden
 

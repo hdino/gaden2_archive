@@ -1,3 +1,4 @@
+#include <gaden_common/openvdb_helper.h>
 #include <gaden_common/ros_parameters.h>
 #include <gaden_preprocessing/preprocessing.h>
 
@@ -5,16 +6,6 @@
 #include <yaml-cpp/yaml.h>
 
 namespace gaden {
-
-template <typename T>
-openvdb::math::Vec3<T> getOpenVdbVec3FromYaml(const YAML::Node &sequence)
-{
-    openvdb::math::Vec3<T> vector;
-    vector.x() = sequence[0].as<T>();
-    vector.y() = sequence[1].as<T>();
-    vector.z() = sequence[2].as<T>();
-    return vector;
-}
 
 PreprocessingConfig loadPreprocessingConfig(std::shared_ptr<rclcpp::Node> &ros_node)
 {
@@ -47,7 +38,7 @@ PreprocessingConfig loadPreprocessingConfig(std::shared_ptr<rclcpp::Node> &ros_n
 
     config.cell_size = preprocessing["cell_size"].as<double>(); // TODO Default value 1.0?
     config.output_path = base_path + preprocessing["output_path"].as<std::string>();
-    config.empty_point = getOpenVdbVec3FromYaml<double>(preprocessing["empty_point"]);
+    config.empty_point = gaden::openvdb_helper::getVec3FromYaml<double>(preprocessing["empty_point"]);
 
     return config;
 }
@@ -55,60 +46,6 @@ PreprocessingConfig loadPreprocessingConfig(std::shared_ptr<rclcpp::Node> &ros_n
 } // namespace gaden
 
 
-//void printEnv(std::string filename, std::vector<std::vector<std::vector<int> > > env, int scale)
-//{
-//    std::ofstream outfile(filename.c_str());
-//    if (filename.find(".pgm") != std::string::npos)
-//    {
-//        outfile << "P2\n"
-//                << scale *  env[0].size() << " " << scale * env.size() << "\n" <<"1\n";
-//        //things are repeated to scale them up (the image is too small!)
-//        for (int row = env.size()-1; row >= 0; row--)
-//        {
-//            for (int j = 0; j < scale; j++)
-//            {
-//                for (int col = 0; col <env[0].size() ; col++)
-//                {
-//                    for (int i = 0; i < scale; i++)
-//                    {
-//                        outfile << (env[row][col][0] == 3 ? 1 : 0) << " ";
-//                    }
-//                }
-//                outfile << "\n";
-//            }
-//        }
-//    }
-//    else
-//    {
-//        outfile <<  "#env_min(m) " << env_min_x << " " << env_min_y << " " << env_min_z << "\n";
-//        outfile <<  "#env_max(m) " << env_max_x << " " << env_max_y << " " << env_max_z << "\n";
-//        outfile <<  "#num_cells " << env[0].size() << " " << env.size() << " " << env[0][0].size() << "\n";
-//        outfile <<  "#cell_size(m) " << cell_size << "\n";
-//        //things are repeated to scale them up (the image is too small!)
-//        for (int height = 0; height < env[0][0].size(); height++)
-//        {
-//            for (int col = 0; col <env[0].size(); col++)
-//            {
-//                for (int j = 0; j < scale; j++)
-//                {
-//                    for (int row = 0; row <env.size(); row++)
-//                    {
-//                        for (int i = 0; i < scale; i++)
-//                        {
-//                            outfile << (env[row][col][height]==0?1:
-//                                            (env[row][col][height]==3?2:
-//                                            (env[row][col][height]==5?0:
-//                                                env[row][col][height])))
-//                                    << " ";
-//                        }
-//                    }
-//                    outfile << "\n";
-//                }
-//            }
-//            outfile << ";\n";
-//        }
-//    }
-//}
 //void printWind(std::vector<std::vector<std::vector<double> > > U,
 //                std::vector<std::vector<std::vector<double> > > V,
 //                std::vector<std::vector<std::vector<double> > > W, std::string filename){

@@ -1,4 +1,6 @@
+#include <openvdb/openvdb.h>
 #include <rclcpp/rclcpp.hpp>
+#include <rl_logging/ros2_logging.hpp>
 
 #include <gaden_common/filesystem.h>
 #include <gaden_common/occupancy_grid.h>
@@ -6,15 +8,14 @@
 #include <gaden_preprocessing/preprocessing.h>
 #include <gaden_preprocessing/stl_format.h>
 
-#include <openvdb/openvdb.h>
-
 int main(int argc, char **argv)
 {
     //Init
     rclcpp::init(argc, argv);
     auto node_options = rclcpp::NodeOptions().automatically_declare_parameters_from_overrides(true);
     auto ros_node = std::make_shared<rclcpp::Node>("gaden_preprocessing", node_options);
-    rclcpp::Logger logger = ros_node->get_logger();
+    //rclcpp::Logger logger = ros_node->get_logger();
+    rl::Logger logger = rl::logging::Ros2Logger::create(ros_node->get_logger());
 
 //    //int numModels;
 //    ros::Publisher pub = nh.advertise<std_msgs::Bool>("preprocessing_done",5,true);
@@ -23,8 +24,8 @@ int main(int argc, char **argv)
 
     if (!gaden::createDirectoriesIfNotExist(config.output_path, logger))
     {
-        RCLCPP_ERROR_STREAM(logger, "Creation of output directory: "
-                            << config.output_path << " failed. Aborting.");
+        logger.error() << "Creation of output directory: "
+                       << config.output_path << " failed. Aborting.";
         return 0;
     }
 
@@ -37,7 +38,7 @@ int main(int argc, char **argv)
 
 //    //--------------------------
 
-    auto occupancy_grid = gaden::createGrid();
+    auto occupancy_grid = gaden::createGrid(config.cell_size);
 
 //    std::vector<std::string> CADfiles;
 //    for(int i = 0; i< numModels; i++){
@@ -52,8 +53,8 @@ int main(int argc, char **argv)
         gaden::StlData stl_data = gaden::readStlAscii(cad_model.path, logger);
         if (stl_data.isEmpty())
         {
-            RCLCPP_ERROR_STREAM(logger, "CAD file " << cad_model.path
-                                << " invalid. Aborting.");
+            logger.error() << "CAD file " << cad_model.path
+                           << " invalid. Aborting.";
             return 0;
         }
         stl_data.addToOccupancyGrid(occupancy_grid, gaden::Occupancy::Occupied, config.cell_size);
@@ -105,8 +106,8 @@ int main(int argc, char **argv)
         gaden::StlData stl_data = gaden::readStlAscii(cad_model.path, logger);
         if (stl_data.isEmpty())
         {
-            RCLCPP_ERROR_STREAM(logger, "CAD file " << cad_model.path
-                                << " invalid. Aborting.");
+            logger.error() << "CAD file " << cad_model.path
+                           << " invalid. Aborting.";
             return 0;
         }
         stl_data.addToOccupancyGrid(occupancy_grid, gaden::Occupancy::Outlet, config.cell_size);
@@ -135,12 +136,14 @@ int main(int argc, char **argv)
 //    printEnv(boost::str(boost::format("%s/OccupancyGrid3D.csv") % output_path.c_str()), env, 1);
 //    printYaml(output_path);
 
-    std::string occupancy_png_file = (std::filesystem::path(config.output_path) / "occupancy.png").string();
-    RCLCPP_INFO_STREAM(logger, "Saving environment as PNG to " << occupancy_png_file);
+    std::filesystem::path output_path = config.output_path;
+
+    std::string occupancy_png_file = (output_path / "occupancy.png").string();
+    logger.info() << "Saving environment as PNG to " << occupancy_png_file;
     gaden::exportPng(occupancy_grid, occupancy_png_file, logger, 10);
 
-    std::string occupancy_grid_file = (std::filesystem::path(config.output_path) / "OccupancyGrid.vdb").string();
-    RCLCPP_INFO_STREAM(logger, "Writing occupancy grid to: " << occupancy_grid_file);
+    std::string occupancy_grid_file = (output_path / "OccupancyGrid.vdb").string();
+    logger.info() << "Writing occupancy grid to: " << occupancy_grid_file;
     openvdb::io::File(occupancy_grid_file).write({occupancy_grid});
 
 //    //-------------------------
