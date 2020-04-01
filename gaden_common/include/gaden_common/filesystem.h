@@ -13,11 +13,11 @@
 
 #include <string>
 
-#include <rclcpp/logger.hpp>
+#include <rl_logging/logging_interface.hpp>
 
 namespace gaden {
 
-bool createDirectoriesIfNotExist(const std::string &path, rclcpp::Logger &logger);
+bool createDirectoriesIfNotExist(const std::string &path, rl::Logger &logger);
 
 } // namespace gaden
 

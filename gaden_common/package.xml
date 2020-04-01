@@ -12,6 +12,7 @@
   <depend>gaden_eigen</depend>
   <depend>OpenVDB</depend>
   <depend>rclcpp</depend>
+  <depend>rl_logging</depend>
   <depend>yaml-cpp</depend>
 
   <test_depend>ament_lint_auto</test_depend>

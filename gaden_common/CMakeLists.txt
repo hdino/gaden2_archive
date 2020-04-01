@@ -9,12 +9,14 @@ include(gaden_common-extras.cmake)
 find_package(gaden_eigen REQUIRED)
 find_package(OpenVDB 7.1 REQUIRED)
 find_package(rclcpp REQUIRED)
+find_package(rl_logging REQUIRED)
 find_package(yaml-cpp REQUIRED)
 
 #ament_export_include_directories(${EIGEN3_INCLUDE_DIRS})
 
 add_library(gaden_common
   src/cad_model.cpp
+  src/file_read_helper.cpp
   src/filesystem.cpp
   src/gaden1_occupancy_grid_importer.cpp
   src/occupancy_grid.cpp
@@ -30,18 +32,21 @@ target_include_directories(gaden_common PUBLIC
 target_link_libraries(gaden_common
   OpenVDB::openvdb
   yaml-cpp
+  rl_logging
 )
 
 ament_target_dependencies(gaden_common
   gaden_eigen
   OpenVDB
   rclcpp
+  rl_logging
   yaml-cpp
 )
 
 ament_export_dependencies(
   gaden_eigen
   OpenVDB
+  rl_logging
 )
 
 ament_export_interfaces(export_gaden_common HAS_LIBRARY_TARGET)

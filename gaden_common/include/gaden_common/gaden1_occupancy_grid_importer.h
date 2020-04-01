@@ -3,11 +3,14 @@
 
 #include <string>
 
+#include <rl_logging/logging_interface.hpp>
+
 #include "occupancy_grid_type.h"
 
 namespace gaden {
 
-OccupancyGrid::Ptr importOccupancyGridFromGaden1(const std::string &filename);
+OccupancyGrid::Ptr importOccupancyGridFromGaden1(const std::string &filename,
+                                                 rl::Logger &logger);
 
 } // namespace gaden
 

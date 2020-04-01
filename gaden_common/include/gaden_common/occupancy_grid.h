@@ -6,14 +6,16 @@
 #include <string>
 
 //#include <Eigen/Core>
+#include <rl_logging/logging_interface.hpp>
 
 #include "occupancy_grid_type.h"
 
 namespace gaden {
 
-OccupancyGrid::Ptr createGrid();
+OccupancyGrid::Ptr createGrid(double cell_size);
 
-OccupancyGrid::Ptr loadGridFromFile(const std::string &filename);
+OccupancyGrid::Ptr loadGridFromFile(const std::string &filename,
+                                    rl::Logger &log);
 
 //template <typename T>
 //openvdb::Vec3i getCellCoordinates(const Eigen::Matrix<T, 3, 1> &vector, double cell_size)

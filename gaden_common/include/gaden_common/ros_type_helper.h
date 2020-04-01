@@ -25,6 +25,8 @@ inline geometry_msgs::msg::Point getPoint(double value)
     return getPoint(value, value, value);
 }
 
+std_msgs::msg::ColorRGBA getColor(float r, float g, float b, float a = 1.0);
+
 class DefaultOrientation
 {
 public:

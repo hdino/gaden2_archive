@@ -46,6 +46,16 @@ geometry_msgs::msg::Point getPoint(double x, double y, double z)
     return point;
 }
 
+std_msgs::msg::ColorRGBA getColor(float r, float g, float b, float a)
+{
+    std_msgs::msg::ColorRGBA c;
+    c.r = r;
+    c.g = g;
+    c.b = b;
+    c.a = a;
+    return c;
+}
+
 const geometry_msgs::msg::Quaternion & DefaultOrientation::get()
 {
     static DefaultOrientation instance;
