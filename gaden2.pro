@@ -10,7 +10,8 @@ PKGCONFIG += eigen3
 
 INCLUDEPATH += \
     /opt/ros/eloquent/include \
-    $$PWD/../install/OpenVDB/include
+    $$PWD/../install/OpenVDB/include \
+    $$PWD/../install/rl_logging/include
 
 include(gaden_common/gaden_common.pri)
 include(gaden_environment/gaden_environment.pri)
