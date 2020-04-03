@@ -7,6 +7,7 @@
 #include <charconv>
 #include <fstream>
 #include <sstream>
+#include <system_error>
 
 namespace gaden {
 
@@ -78,7 +79,9 @@ OccupancyGrid::Ptr importOccupancyGridFromGaden1(const std::string &filename,
     auto grid_accessor = grid->getAccessor();
 
     openvdb::Vec3i cell_index_min = env_min / cell_size;
+    openvdb::Vec3i cell_index_max = env_max / cell_size;
     logger.info() << "Minimum cell index: " << cell_index_min.str();
+    logger.info() << "Maximum cell index: " << cell_index_max.str();
 
 //    std::array<std::string, 4> header_lines;
 //    size_t i;
@@ -106,16 +109,34 @@ OccupancyGrid::Ptr importOccupancyGridFromGaden1(const std::string &filename,
         if (line == ";")
         {
             ++current_cell.z();
-            current_cell.x() = 0;
+            current_cell.x() = cell_index_min.x();
             continue;
         }
 
         conversion_result.ptr = line.data();
         const char *end_ptr = line.data() + line.size();
 
-        for (current_cell.y() = 0; current_cell.y() < num_cells.y(); ++current_cell.y())
+        for (current_cell.y() = cell_index_min.y();
+             current_cell.y() < cell_index_max.y();
+             ++current_cell.y())
         {
-             =
+            conversion_result = std::from_chars(conversion_result.ptr, end_ptr, cell_value);
+
+            if (conversion_result.ec != std::errc())
+                break;
+
+            ++conversion_result.ptr; // skip the delimiting whitespace character
+
+            if (cell_value > 0)
+                grid_accessor.setValue(current_cell, cell_value);
+        }
+
+        if (conversion_result.ec != std::errc())
+        {
+            std::error_code ec = std::make_error_code(conversion_result.ec);
+            logger.error() << "Parsing line " << line << " failed. Error: "
+                           << ec.message();
+            return OccupancyGrid::Ptr();
         }
 
         ++current_cell.x();
@@ -125,7 +146,7 @@ OccupancyGrid::Ptr importOccupancyGridFromGaden1(const std::string &filename,
     {
         logger.error() << "Error while reading " << filename
                        << " : " << strerror(errno);
-        grid->clear();
+        return OccupancyGrid::Ptr();
     }
 
     logger.info() << "Cells read: " << current_cell.asVec3i().str();

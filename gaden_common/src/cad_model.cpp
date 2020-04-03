@@ -5,15 +5,36 @@
 
 namespace gaden {
 
+std::string toString(const CadModel &cad_model, size_t indention)
+{
+    (void)indention;
+    return "Path: " + cad_model.path;
+}
+
+std::string toString(const CadModelColor &cad_model, size_t indention)
+{
+    std::string ind(indention, ' ');
+    return "Path:  " + cad_model.path +
+           "\n" + ind +
+           "Color: " + toString(cad_model.color);
+}
+
 CadModel getCadModelFromYaml(const YAML::Node &node, const std::string &base_path)
 {
     CadModel cad_model;
     cad_model.path = base_path + node["cad_model_path"].as<std::string>();
-    cad_model.color = ros_type::getColorFromYaml(node);
     return cad_model;
 }
 
-visualization_msgs::msg::Marker getAsMarker(const CadModel &cad_model, int id,
+CadModelColor getCadModelColorFromYaml(const YAML::Node &node, const std::string &base_path)
+{
+    CadModelColor result;
+    static_cast<CadModel &>(result) = getCadModelFromYaml(node, base_path);
+    result.color = ros_type::getColorFromYaml(node);
+    return result;
+}
+
+visualization_msgs::msg::Marker getAsMarker(const CadModelColor &cad_model, int id,
                                             const builtin_interfaces::msg::Time &stamp,
                                             const std::string &frame_id)
 {

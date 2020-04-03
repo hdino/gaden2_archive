@@ -10,6 +10,11 @@ namespace YAML {
 class Node;
 }
 
+namespace gaden {
+std::string toString(const geometry_msgs::msg::Point &point, size_t indention = 0);
+std::string toString(const std_msgs::msg::ColorRGBA &color, size_t indention = 0);
+} // namespace gaden
+
 namespace gaden::ros_type {
 
 std_msgs::msg::ColorRGBA getColorFromYaml(const YAML::Node &parent);

@@ -2,6 +2,29 @@
 
 #include <yaml-cpp/yaml.h>
 
+namespace gaden {
+
+std::string toString(const geometry_msgs::msg::Point &point, size_t indention)
+{
+    (void)indention;
+    //std::string ind(indention, ' ');
+    return "["  + std::to_string(point.x) +
+           ", " + std::to_string(point.y) +
+           ", " + std::to_string(point.z) + "]";
+}
+
+std::string toString(const std_msgs::msg::ColorRGBA &color, size_t indention)
+{
+    (void)indention;
+    //std::string ind(indention, ' ');
+    return "["  + std::to_string(color.r) +
+           ", " + std::to_string(color.g) +
+           ", " + std::to_string(color.b) +
+           ", " + std::to_string(color.a) + "]";
+}
+
+} // namespace gaden
+
 namespace gaden::ros_type {
 
 std_msgs::msg::ColorRGBA getColorFromYaml(const YAML::Node &parent)

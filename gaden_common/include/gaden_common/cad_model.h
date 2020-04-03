@@ -15,12 +15,19 @@ namespace gaden {
 struct CadModel
 {
     std::string path;
+};
+std::string toString(const CadModel &cad_model, size_t indention = 0);
+
+struct CadModelColor : public CadModel
+{
     std_msgs::msg::ColorRGBA color;
 };
+std::string toString(const CadModelColor &cad_model, size_t indention = 0);
 
 CadModel getCadModelFromYaml(const YAML::Node &node, const std::string &base_path);
+CadModelColor getCadModelColorFromYaml(const YAML::Node &node, const std::string &base_path);
 
-visualization_msgs::msg::Marker getAsMarker(const CadModel &cad_model, int id,
+visualization_msgs::msg::Marker getAsMarker(const CadModelColor &cad_model, int id,
                                             const builtin_interfaces::msg::Time &stamp,
                                             const std::string &frame_id);
 
