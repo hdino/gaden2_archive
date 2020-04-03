@@ -20,25 +20,27 @@ PreprocessingConfig loadPreprocessingConfig(std::shared_ptr<rclcpp::Node> &ros_n
     // common part
     YAML::Node yaml_common = yaml_config["common"];
 
-    for (const YAML::Node &item : yaml_common["environment"])
+    config.output_path = base_path + yaml_common["preprocessing_output_path"].as<std::string>();
+
+    // preprocessing part
+    YAML::Node preprocessing = yaml_config["preprocessing"];
+    //std::cout << preprocessing << std::endl;
+
+    config.cell_size = preprocessing["cell_size"].as<double>(); // TODO Default value 1.0?
+
+    for (const YAML::Node &item : preprocessing["environment"])
     {
         CadModel cad_model = getCadModelFromYaml(item, base_path);
         config.environment_cad_models.push_back(cad_model);
     }
 
-    for (const YAML::Node &item : yaml_common["outlets"])
+    for (const YAML::Node &item : preprocessing["outlets"])
     {
         CadModel cad_model = getCadModelFromYaml(item, base_path);
         config.outlet_cad_models.push_back(cad_model);
     }
 
-    // preprocessing part
-    YAML::Node preprocessing = yaml_config["preprocessing"];
-    std::cout << preprocessing << std::endl;
-
-    config.cell_size = preprocessing["cell_size"].as<double>(); // TODO Default value 1.0?
-    config.output_path = base_path + preprocessing["output_path"].as<std::string>();
-    config.empty_point = gaden::openvdb_helper::getVec3FromYaml<double>(preprocessing["empty_point"]);
+    //config.empty_point = gaden::openvdb_helper::getVec3FromYaml<double>(preprocessing["empty_point"]);
 
     return config;
 }

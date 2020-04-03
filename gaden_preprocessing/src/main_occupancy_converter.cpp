@@ -22,5 +22,9 @@ int main(int argc, char **argv)
         return 0;
     }
 
+    std::string occupancy_grid_file = argv[2];
+    logger.info() << "Writing occupancy grid to: " << occupancy_grid_file;
+    openvdb::io::File(occupancy_grid_file).write({grid});
+
     return 0;
 }
