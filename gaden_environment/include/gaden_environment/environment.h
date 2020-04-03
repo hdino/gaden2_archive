@@ -22,14 +22,16 @@ struct GasSource
     std_msgs::msg::ColorRGBA color;
     double scale;
 };
+std::string toString(const GasSource &gas_source, size_t indention = 0);
 
 struct EnvironmentConfig
 {
     std::string fixed_frame;
     std::string occupancy_grid_file;
     std::vector<GasSource> gas_sources;
-    std::vector<CadModel> cad_models;
+    std::vector<CadModelColor> cad_models;
 };
+std::string toString(const EnvironmentConfig &config, size_t indention = 0);
 
 EnvironmentConfig loadEnvironmentConfig(std::shared_ptr<rclcpp::Node> &ros_node,
                                         rl::Logger &log);

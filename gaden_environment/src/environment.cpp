@@ -16,9 +16,39 @@
 
 namespace gaden {
 
-// ===============================//
-//      Load Node parameters      //
-// ===============================//
+std::string toString(const GasSource &gas_source, size_t indention)
+{
+    std::string ind(indention, ' ');
+    return "Position: " + toString(gas_source.position, indention + 4) +
+           "\n" + ind +
+           "Color:    " + toString(gas_source.color, indention + 4) +
+           "\n" + ind +
+           "Scale:    " + std::to_string(gas_source.scale);
+}
+
+std::string toString(const EnvironmentConfig &config, size_t indention)
+{
+    std::string list_ind(indention + 2, ' ');
+
+    std::string gas_sources = "Gas sources:";
+    for (const GasSource &gas_source : config.gas_sources)
+        gas_sources += "\n" + list_ind + "- " +
+                       toString(gas_source, indention + 4);
+
+    std::string cad_models = "CAD models:";
+    for (const CadModelColor &cad_model : config.cad_models)
+        cad_models += "\n" + list_ind + "- " +
+                      toString(cad_model, indention + 4);
+
+    std::string ind(indention, ' ');
+    return "Fixed frame: " + config.fixed_frame +
+           "\n" + ind +
+           "Occupancy grid file: " + config.occupancy_grid_file +
+           "\n" + ind +
+           gas_sources +
+           "\n" + ind +
+           cad_models;
+}
 
 EnvironmentConfig loadEnvironmentConfig(std::shared_ptr<rclcpp::Node> &ros_node,
                                         rl::Logger &log)
@@ -41,15 +71,15 @@ EnvironmentConfig loadEnvironmentConfig(std::shared_ptr<rclcpp::Node> &ros_node,
 
     std::string config_file = base_path + "config.yaml";
     YAML::Node yaml_config = YAML::LoadFile(config_file);
-    YAML::Node environment = yaml_config["environment"];
-    log.info() << "Read config file " << config_file << " :\n"
-               << environment;
 
-    config.fixed_frame = environment["fixed_frame"].as<std::string>();
-    config.occupancy_grid_file = base_path + environment["occupancy_file"].as<std::string>();
+    // common part
+    YAML::Node yaml_common = yaml_config["common"];
+
+    config.fixed_frame = yaml_common["fixed_frame"].as<std::string>();
+    config.occupancy_grid_file = base_path + yaml_common["occupancy_file"].as<std::string>();
 
     // fill in gas sources
-    for (const YAML::Node &item : environment["gas_sources"])
+    for (const YAML::Node &item : yaml_common["gas_sources"])
     {
         GasSource gas_source;
         gas_source.position = ros_type::getPositionFromYaml(item);
@@ -58,10 +88,15 @@ EnvironmentConfig loadEnvironmentConfig(std::shared_ptr<rclcpp::Node> &ros_node,
         config.gas_sources.push_back(gas_source);
     }
 
+    // environment part
+    YAML::Node environment = yaml_config["environment"];
+    //log.info() << "Read config file " << config_file << " :\n"
+    //           << environment;
+
     // fill in CAD models
     for (const YAML::Node &item : environment["cad_models"])
     {
-        CadModel cad_model = getCadModelFromYaml(item, base_path);
+        CadModelColor cad_model = getCadModelColorFromYaml(item, base_path);
         config.cad_models.push_back(cad_model);
     }
 

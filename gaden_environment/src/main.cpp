@@ -15,10 +15,11 @@ int main( int argc, char** argv )
     rclcpp::init(argc, argv);
     auto node_options = rclcpp::NodeOptions().automatically_declare_parameters_from_overrides(true);
     auto ros_node = std::make_shared<rclcpp::Node>("environment", node_options);
-    rl::Logger log = rl::logging::Ros2Logger::create(ros_node->get_logger());
+    rl::Logger logger = rl::logging::Ros2Logger::create(ros_node->get_logger());
 
     //Load Parameters
-    auto config = gaden::loadEnvironmentConfig(ros_node, log);
+    auto config = gaden::loadEnvironmentConfig(ros_node, logger);
+    logger.info() << "Configuration:\n    " << gaden::toString(config, 4);
 
     // Publishers
     auto gas_source_publisher = ros_node->create_publisher<
@@ -65,12 +66,12 @@ int main( int argc, char** argv )
     gaden::OccupancyGrid::Ptr occupancy_grid;
     if (!config.occupancy_grid_file.empty())
     {
-        occupancy_grid = gaden::loadGridFromFile(config.occupancy_grid_file, log);
+        occupancy_grid = gaden::loadGridFromFile(config.occupancy_grid_file, logger);
         if (occupancy_grid)
             environment = gaden::getAsMarkerArray(occupancy_grid,
                                                   ros_node->get_clock()->now(),
                                                   config.fixed_frame,
-                                                  log);
+                                                  logger);
     }
 //    if (!occupancy3D_data.empty())
 //        loadEnvironment(environment);
