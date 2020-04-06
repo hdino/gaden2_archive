@@ -1,10 +1,10 @@
-#ifndef GADEN_ENVIRONMENT_GRID_TO_MARKER_H_INCLUDED
-#define GADEN_ENVIRONMENT_GRID_TO_MARKER_H_INCLUDED
+#ifndef GADEN_COMMON_GRID_TO_MARKER_HPP_INCLUDED
+#define GADEN_COMMON_GRID_TO_MARKER_HPP_INCLUDED
 
 #include <rl_logging/logging_interface.hpp>
 #include <visualization_msgs/msg/marker_array.hpp>
 
-#include <gaden_common/occupancy_grid_type.h>
+#include "occupancy_grid_type.h"
 
 namespace gaden {
 
@@ -16,4 +16,4 @@ getAsMarkerArray(OccupancyGrid::Ptr grid,
 
 } // namespace gaden
 
-#endif // GADEN_ENVIRONMENT_GRID_TO_MARKER_H_INCLUDED
+#endif // GADEN_COMMON_GRID_TO_MARKER_HPP_INCLUDED

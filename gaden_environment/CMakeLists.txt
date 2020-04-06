@@ -12,7 +12,6 @@ find_package(yaml-cpp REQUIRED)
 
 add_executable(environment
   src/environment.cpp
-  src/grid_to_marker.cpp
   src/main.cpp
 )
 

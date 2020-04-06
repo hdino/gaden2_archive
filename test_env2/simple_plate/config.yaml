@@ -1,0 +1,75 @@
+occupancy_file: "output/OccupancyGrid.vdb"
+recreate_existing_occupancy: True
+
+environment:
+  format: inline # should support: inline, stl (like GADEN1), sdf (http://sdformat.org/)
+  cell_size: 1
+  inline_environment:
+    objects:
+      - identifier: ground_plate
+        type: box
+        origin: [-50, -25, -1]
+        size: [100, 50, 1]
+        color: [0.5, 0.5, 0.5]
+  bounding_box:
+    origin: [-50, -25, -1]
+    size: [100, 50, 50]
+
+gas_sources:
+  - position: [-45, 0, 1]
+    scale: 0.2
+    color: [0.0, 1.0, 0.0]
+
+visualisation:
+  fixed_frame: "map"
+  visualise_environment: True
+  visualise_bounding_box: False
+
+
+
+
+old_common:
+  preprocessing_output_path: output # path to the csv file where we want to write the occupancy map
+  simulation_output_path: result
+  occupancy_file: "OccupancyGrid.vdb"
+  fixed_frame: "map"
+  gas_sources:
+    - position: [0.5, 3.0, 0.5]
+      scale: 0.2
+      color: [0.0, 1.0, 0.0]
+
+old_preprocessing:
+  cell_size: 0.1
+  environment:
+    - cad_model_path: cad_models/10x6_walls.stl
+  outlets:
+    - cad_model_path: cad_models/10x6_door_left.stl
+    - cad_model_path: cad_models/10x6_door_right.stl
+  # Wind Data (the node will append _i.csv to the name that is specified here)
+  wind_data_path: wind_simulations/dynamic/wind_at_cell_centers
+  #empty_point: [1.0, 1.0, 0.5] # Location of a point in free-space [x [m], y [m], z [m]]
+
+old_environment:
+  cad_models:
+    - cad_model_path: cad_models/10x6_walls.dae
+      color: [0.92, 0.96, 0.96]
+    - cad_model_path: cad_models/10x6_door_left.dae
+      color: [0.96, 0.17, 0.3]
+    - cad_model_path: cad_models/10x6_door_right.dae
+      color: [0.96, 0.17, 0.3]
+
+old_simulation:
+  sim_time: 300 # [s] Total time of the gas dispersion simulation
+  time_step: 0.1 # [s] Time increment between snapshots. Set aprox = cell_size/max_wind_speed.
+  num_filaments_sec: 10 # [1/s] Num of filaments released each second
+  ppm_filament_center: 10 # [ppm] Gas concentration at the center of the 3D gaussian (filament)
+  filament_initial_std: 10 # [cm] Sigma of the filament at t=0-> 3DGaussian shape
+  filament_growth_gamma: 10 # [(cm)^2/s] Growth ratio of the filament_std
+  filament_noise_std: 0.02 # [m] Range of the white noise added on each iteration
+  gas_type: Methane # Possible values: Ethanol, Methane, Hydrogen, Acetone
+  temperature: 298 # [K]
+  pressure: 1 # [atm]
+  concentration_unit: ppm # Possible values: ppm, molecules_per_cm3. (When ppm is used, set temp and pressure accordingly.)
+  save_results: True
+  save_results_time_step: 0.5 # [s] Time increment between saving state to file
+  save_results_min_time: 0.0 # [s] Time to start saving results to file

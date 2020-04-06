@@ -10,6 +10,7 @@ find_package(gaden_eigen REQUIRED)
 find_package(OpenVDB 7.1 REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(rl_logging REQUIRED)
+find_package(visualization_msgs REQUIRED)
 find_package(yaml-cpp REQUIRED)
 
 #ament_export_include_directories(${EIGEN3_INCLUDE_DIRS})
@@ -19,6 +20,9 @@ add_library(gaden_common
   src/file_read_helper.cpp
   src/filesystem.cpp
   src/gaden1_occupancy_grid_importer.cpp
+  src/gas_source.cpp
+  src/grid_to_marker.cpp
+  src/inline_environment.cpp
   src/occupancy_grid.cpp
   src/ros_parameters.cpp
   src/ros_type_helper.cpp
@@ -31,8 +35,8 @@ target_include_directories(gaden_common PUBLIC
 
 target_link_libraries(gaden_common
   OpenVDB::openvdb
-  yaml-cpp
   rl_logging
+  yaml-cpp
 )
 
 ament_target_dependencies(gaden_common
@@ -40,6 +44,7 @@ ament_target_dependencies(gaden_common
   OpenVDB
   rclcpp
   rl_logging
+  visualization_msgs
   yaml-cpp
 )
 
@@ -47,6 +52,8 @@ ament_export_dependencies(
   gaden_eigen
   OpenVDB
   rl_logging
+  visualization_msgs
+  yaml-cpp
 )
 
 ament_export_interfaces(export_gaden_common HAS_LIBRARY_TARGET)

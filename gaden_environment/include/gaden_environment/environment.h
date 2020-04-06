@@ -9,6 +9,7 @@
 #include <visualization_msgs/msg/marker.hpp>
 
 #include <gaden_common/cad_model.h>
+#include <gaden_common/gas_source.hpp>
 
 namespace rclcpp {
 class Node;
@@ -16,13 +17,13 @@ class Node;
 
 namespace gaden {
 
-struct GasSource
-{
-    geometry_msgs::msg::Point position;
-    std_msgs::msg::ColorRGBA color;
-    double scale;
-};
-std::string toString(const GasSource &gas_source, size_t indention = 0);
+//struct GasSource
+//{
+//    geometry_msgs::msg::Point position;
+//    std_msgs::msg::ColorRGBA color;
+//    double scale;
+//};
+//std::string toString(const GasSource &gas_source, size_t indention = 0);
 
 struct EnvironmentConfig
 {
@@ -36,9 +37,9 @@ std::string toString(const EnvironmentConfig &config, size_t indention = 0);
 EnvironmentConfig loadEnvironmentConfig(std::shared_ptr<rclcpp::Node> &ros_node,
                                         rl::Logger &log);
 
-visualization_msgs::msg::Marker getAsMarker(const GasSource &gas_source, int id,
-                                            const builtin_interfaces::msg::Time &stamp,
-                                            const std::string &frame_id);
+//visualization_msgs::msg::Marker getAsMarker(const GasSource &gas_source, int id,
+//                                            const builtin_interfaces::msg::Time &stamp,
+//                                            const std::string &frame_id);
 
 } // namespace gaden
 

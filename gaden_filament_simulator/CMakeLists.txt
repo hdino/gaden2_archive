@@ -7,9 +7,12 @@ include(${CMAKE_CURRENT_SOURCE_DIR}/../common_config.cmake)
 find_package(gaden_common REQUIRED)
 
 add_executable(filament_simulator
+  src/environment_visualisation.cpp
   src/filament.cpp
   src/filament_simulator.cpp
   src/main.cpp
+  src/occupancy.cpp
+  src/simulator_config.cpp
 )
 
 target_include_directories(filament_simulator PUBLIC

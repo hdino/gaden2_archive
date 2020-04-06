@@ -1,6 +1,6 @@
+#include <gaden_common/grid_to_marker.hpp>
 #include <gaden_common/occupancy_grid.h>
 #include <gaden_environment/environment.h>
-#include <gaden_environment/grid_to_marker.h>
 
 #include <rclcpp/rclcpp.hpp>
 #include <rl_logging/ros2_logging.hpp>
