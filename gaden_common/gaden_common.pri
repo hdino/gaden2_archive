@@ -3,6 +3,7 @@ DEPENDPATH += $$PWD
 
 SOURCES += \
     $$PWD/src/cad_model.cpp \
+    $$PWD/src/eigen_helper.cpp \
     $$PWD/src/file_read_helper.cpp \
     $$PWD/src/filesystem.cpp \
     $$PWD/src/gaden1_occupancy_grid_importer.cpp \
@@ -10,11 +11,13 @@ SOURCES += \
     $$PWD/src/grid_to_marker.cpp \
     $$PWD/src/inline_environment.cpp \
     $$PWD/src/occupancy_grid.cpp \
+    $$PWD/src/openvdb_helper.cpp \
     $$PWD/src/ros_parameters.cpp \
     $$PWD/src/ros_type_helper.cpp
 
 HEADERS += \
     $$PWD/include/gaden_common/cad_model.h \
+    $$PWD/include/gaden_common/eigen_helper.hpp \
     $$PWD/include/gaden_common/file_read_helper.h \
     $$PWD/include/gaden_common/filesystem.h \
     $$PWD/include/gaden_common/gaden1_occupancy_grid_importer.h \

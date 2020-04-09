@@ -17,8 +17,15 @@ environment:
 
 gas_sources:
   - position: [-45, 0, 1]
+    num_filaments_per_second: 10
     scale: 0.2
     color: [0.0, 1.0, 0.0]
+
+wind:
+  format: inline # should support inline and OpenFOAM output
+  inline_wind:
+    direction: [1, 0, 0]
+    velocity: 1 # [m/s] ?
 
 visualisation:
   fixed_frame: "map"

@@ -78,11 +78,13 @@ bool generateOccupancyFile(const SimulatorConfig &config, rl::Logger &logger)
 
     double cell_size = grid->metaValue<double>("cell_size");
     Box bounding_box = getBox(yaml_environment["bounding_box"]);
-    openvdb::Vec3i bounding_box_origin = bounding_box.origin / cell_size;
-    openvdb::Vec3i bounding_box_size = bounding_box.size / cell_size;
+    //openvdb::Vec3i bounding_box_origin = bounding_box.origin / cell_size;
+    //openvdb::Vec3i bounding_box_size = bounding_box.size / cell_size;
 
-    grid->insertMeta("bounding_box_origin", openvdb::Vec3IMetadata(bounding_box_origin));
-    grid->insertMeta("bounding_box_size", openvdb::Vec3IMetadata(bounding_box_size));
+    //grid->insertMeta("bounding_box_origin", openvdb::Vec3IMetadata(bounding_box_origin));
+    //grid->insertMeta("bounding_box_size", openvdb::Vec3IMetadata(bounding_box_size));
+    grid->insertMeta("bounding_box_origin", openvdb::Vec3DMetadata(bounding_box.origin));
+    grid->insertMeta("bounding_box_size", openvdb::Vec3DMetadata(bounding_box.size));
 
     openvdb::io::File(config.occupancy_file).write({grid});
 

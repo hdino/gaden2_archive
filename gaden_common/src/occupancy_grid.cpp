@@ -1,20 +1,10 @@
 #include <gaden_common/occupancy_grid.h>
+#include <gaden_common/openvdb_helper.h>
 #include <gaden_common/math_helper.h>
 
 #include <openvdb/openvdb.h>
 
 namespace gaden {
-
-static void initialiseOpenVdb()
-{
-    static bool openvdb_initialised = false;
-
-    if (!openvdb_initialised)
-    {
-        openvdb::initialize();
-        openvdb_initialised = true;
-    }
-}
 
 OccupancyGrid::Ptr createGrid(double cell_size)
 {

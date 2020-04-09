@@ -5,6 +5,7 @@
  * 2. Displays the Gas-Source Location as two cylinders.
  */
 
+#include <gaden_common/eigen_helper.hpp>
 #include <gaden_common/ros_parameters.h>
 #include <gaden_common/ros_type_helper.h>
 #include <gaden_environment/environment.h>
@@ -79,14 +80,7 @@ EnvironmentConfig loadEnvironmentConfig(std::shared_ptr<rclcpp::Node> &ros_node,
     config.occupancy_grid_file = base_path + yaml_common["occupancy_file"].as<std::string>();
 
     // fill in gas sources
-    for (const YAML::Node &item : yaml_common["gas_sources"])
-    {
-        GasSource gas_source;
-        gas_source.position = ros_type::getPositionFromYaml(item);
-        gas_source.scale = item["scale"].as<double>();
-        gas_source.color = ros_type::getColorFromYaml(item);
-        config.gas_sources.push_back(gas_source);
-    }
+    config.gas_sources = loadAllGasSourcesFrom(yaml_common);
 
     // environment part
     YAML::Node environment = yaml_config["environment"];

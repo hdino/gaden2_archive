@@ -17,6 +17,7 @@ find_package(yaml-cpp REQUIRED)
 
 add_library(gaden_common
   src/cad_model.cpp
+  src/eigen_helper.cpp
   src/file_read_helper.cpp
   src/filesystem.cpp
   src/gaden1_occupancy_grid_importer.cpp
@@ -24,6 +25,7 @@ add_library(gaden_common
   src/grid_to_marker.cpp
   src/inline_environment.cpp
   src/occupancy_grid.cpp
+  src/openvdb_helper.cpp
   src/ros_parameters.cpp
   src/ros_type_helper.cpp
 )

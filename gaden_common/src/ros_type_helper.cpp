@@ -67,6 +67,16 @@ geometry_msgs::msg::Point getPoint(double x, double y, double z)
     return point;
 }
 
+geometry_msgs::msg::Point getPoint(double value)
+{
+    return getPoint(value, value, value);
+}
+
+geometry_msgs::msg::Point getPointFrom(const Eigen::Vector3d &v)
+{
+    return getPoint(v[0], v[1], v[2]);
+}
+
 std_msgs::msg::ColorRGBA getColor(float r, float g, float b, float a)
 {
     std_msgs::msg::ColorRGBA c;
