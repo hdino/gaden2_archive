@@ -35,7 +35,7 @@ public:
 
     const std::vector<GasSource> & getGasSources() const { return gas_sources_; }
 
-    unsigned getTotalSteps() const { return total_sim_steps_; }
+    //unsigned getTotalSteps() const { return total_sim_steps_; }
 
 private:
     struct MakeConstructorPublic;

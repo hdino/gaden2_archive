@@ -5,6 +5,7 @@
 //#include <gaden_filament_simulator/filament_simulator.h>
 #include <gaden_filament_simulator/environment_visualisation.hpp>
 #include <gaden_filament_simulator/filament_model.hpp>
+#include <gaden_filament_simulator/filament_model_rviz.hpp>
 #include <gaden_filament_simulator/inline_wind_model.hpp>
 #include <gaden_filament_simulator/occupancy.hpp>
 #include <gaden_filament_simulator/openvdb_environment_model.hpp>
@@ -55,6 +56,10 @@ int main(int argc, char **argv)
                                               wind_model,
                                               logger);
 
+    auto filament_visualisation = std::make_shared<gaden::FilamentModelRvizVisualisation>(
+                ros_node, gas_dispersion_model, config.visualisation.fixed_frame,
+                gas_dispersion_model->getCellSize());
+
     //rclcpp::Logger logger = ros_node->get_logger();
 
     // Wait preprocessing Node to finish?
@@ -93,5 +98,12 @@ int main(int argc, char **argv)
 //    {
 //        rclcpp::
 //    }
-    rclcpp::spin(ros_node);
+
+    while (rclcpp::ok() && simulator->simulate())
+    {
+        filament_visualisation->publish();
+        rclcpp::spin_some(ros_node);
+    }
+
+    //rclcpp::spin(ros_node);
 }

@@ -4,6 +4,8 @@
 #include <openvdb/openvdb.h>
 //#include <openvdb/Grid.h>
 
+#include "occupancy.hpp"
+
 namespace gaden {
 
 //namespace open_vdb {
@@ -12,8 +14,6 @@ namespace gaden {
 //}
 
 using OccupancyGrid = openvdb::Int32Grid;//open_vdb::UInt8Grid;
-
-enum class Occupancy : uint8_t { Free = 0, Occupied = 1, Outlet = 2 };
 
 } // namespace gaden
 

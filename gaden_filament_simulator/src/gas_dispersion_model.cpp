@@ -3,11 +3,10 @@
 
 namespace gaden {
 
-GasDispersionModel::GasDispersionModel(double cell_size, rl::Logger &parent_logger)
+GasDispersionModel::GasDispersionModel(rl::Logger &parent_logger)
     : logger(parent_logger.getChild("GasDispersionModel"))
-    , cell_size(cell_size)
 {
-    logger.info() << "Cell size: " << cell_size;
+    //
 }
 
 GasDispersionModel::~GasDispersionModel()

@@ -26,6 +26,7 @@ HEADERS += \
     $$PWD/include/gaden_common/inline_environment.hpp \
     $$PWD/include/gaden_common/math_helper.h \
     $$PWD/include/gaden_common/multidim_vector.h \
+    $$PWD/include/gaden_common/occupancy.hpp \
     $$PWD/include/gaden_common/occupancy_grid.h \
     $$PWD/include/gaden_common/occupancy_grid_type.h \
     $$PWD/include/gaden_common/openvdb_helper.h \

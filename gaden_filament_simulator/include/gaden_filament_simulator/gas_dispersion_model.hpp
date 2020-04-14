@@ -12,7 +12,7 @@ class Simulator;
 class GasDispersionModel
 {
 public:
-    GasDispersionModel(double cell_size, rl::Logger &parent_logger);
+    GasDispersionModel(rl::Logger &parent_logger);
     virtual ~GasDispersionModel();
 
     virtual void increment(double time_step) = 0;
@@ -23,8 +23,6 @@ protected:
     rl::Logger logger;
 
     std::shared_ptr<Simulator> simulator;
-
-    double cell_size; // [m] cell_size of the gas distribution
 };
 
 } // namespace gaden

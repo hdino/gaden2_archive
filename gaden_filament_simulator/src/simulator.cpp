@@ -66,6 +66,14 @@ Simulator::~Simulator()
 
 bool Simulator::simulate()
 {
+    if (current_sim_step_ > total_sim_steps_)
+        return false;
+
+    double sim_time = current_sim_step_ * time_step_;
+
+    logger_.info() << "Simulating... sim_time = " << sim_time;
+
+    wind_model_.lock()->increment(time_step_, sim_time);
     gas_model_.lock()->increment(time_step_);
 
     //    if ( (sim.save_results==1) && (sim.sim_time>=sim.results_min_time) )
@@ -75,6 +83,8 @@ bool Simulator::simulate()
     //    }
 
     //sim_time_ += time_step_;
+    ++current_sim_step_;
+    return true;
 }
 
 } // namespace gaden

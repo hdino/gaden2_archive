@@ -7,7 +7,9 @@ namespace gaden {
 
 class InlineWindModel : public WindModel
 {
-    //
+    virtual void increment(double time_step, double total_sim_time);
+
+    Eigen::Vector3d getWindVelocityAt(const Eigen::Vector3d &position);
 };
 
 } // namespace gaden

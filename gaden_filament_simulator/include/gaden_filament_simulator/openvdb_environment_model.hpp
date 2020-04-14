@@ -18,6 +18,8 @@ public:
     bool hasObstacleBetweenPoints(const Eigen::Vector3d &pa,
                                   const Eigen::Vector3d &pb) const;
 
+    Occupancy getOccupancy(const Eigen::Vector3d &p) const;
+
     Occupancy getOccupancy(const openvdb::Coord &coord) const;
 
 private:

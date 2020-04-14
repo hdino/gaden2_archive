@@ -4,6 +4,8 @@
 #include <Eigen/Core>
 #include <rl_logging/logging_interface.hpp>
 
+#include <gaden_common/occupancy.hpp>
+
 namespace gaden {
 
 class EnvironmentModel
@@ -14,6 +16,8 @@ public:
 
     virtual bool hasObstacleBetweenPoints(const Eigen::Vector3d &pa,
                                           const Eigen::Vector3d &pb) const = 0;
+
+    virtual Occupancy getOccupancy(const Eigen::Vector3d &p) const = 0;
 
 protected:
     rl::Logger logger;

@@ -1,6 +1,7 @@
 #include <gaden_common/openvdb_helper.h>
 #include <gaden_filament_simulator/environment_model.hpp>
 #include <gaden_filament_simulator/filament_model.hpp>
+#include <gaden_filament_simulator/physical_constants.hpp>
 #include <gaden_filament_simulator/simulator.hpp>
 
 #include <algorithm>
@@ -10,37 +11,48 @@
 
 namespace gaden {
 
-// gas constant
-static constexpr double R = 8.314'462'618'153'24; // [m3 Pa / (K * mol)]
 static constexpr double SQRT_8_X_PI_POW3 = std::sqrt(8 * std::pow(M_PI, 3)); // []
 
 FilamentModel::FilamentModel(double cell_size, rl::Logger &parent_logger)
-    : GasDispersionModel(cell_size, parent_logger)
+    : GasDispersionModel(parent_logger)
     , concentration_grid_(initConcentrationGrid())
     , concentration_(concentration_grid_->getAccessor())
     , random_engine_(std::random_device()())
+    , cell_size_(cell_size)
 {
+    logger.info() << "Cell size: " << cell_size_;
+
     // load configuration parameters
     double environment_pressure = 1.0 * 101325.0; // [Pa]
     double environment_temperature = 298.0; // [K]
 
     filament_initial_std_ = 0.1; // [m]
-    double ppm_filament_center = 10; // [ppm]
+    filament_initial_std_pow2_ = filament_initial_std_ * filament_initial_std_;
 
-    filament_spawn_radius_ = 1.0;
+    double filament_noise_std = 0.1; // [m] Sigma of the white noise added on each iteration
+    filament_stochastic_movement_distribution_ = std::normal_distribution<double>(0, filament_noise_std);
+
+    filament_spawn_radius_ = 1.0; // [m]
     variable_filament_rate_ = false; // TODO in config
+
+    filament_growth_gamma_ = 0.01; // [m2/s]
+    filament_center_concentration_ = 20e-6; // [] --> ppm * 1e-6
+
+    double gas_specific_gravity = constant::specific_gravity::methane; // []
+    relative_gas_density_ = constant::density_air * (constant::specific_gravity::air - gas_specific_gravity); // [kg/m3]
 
     //double filament_initial_vol = pow(6 * filament_initial_std, 3); // [m3] -> We approximate the infinite volume of the 3DGaussian as 6 sigmas.
     double cell_vol = std::pow(cell_size, 3); //[m3] volume of a cell
     //	filament_numMoles = (envPressure*filament_initial_vol)/(R*envTemperature);//[mol] Num of moles of Air in that volume
-    cell_num_moles_ = (environment_pressure * cell_vol)/(R * environment_temperature); //[mol] Num of moles of Air in that volume
+    double num_moles_per_m3 = environment_pressure / (constant::R * environment_temperature); // [mol/m3]
+    cell_num_moles_ = cell_vol * num_moles_per_m3; //[mol] Num of moles of Air in that volume
 
     // The moles of target_gas in a Filament are distributed following a 3D Gaussian
     // Given the ppm value at the center of the filament, we approximate the total number of gas moles in that filament.
     double filament_volume = SQRT_8_X_PI_POW3 // []
                              * std::pow(filament_initial_std_, 3) // [m3]
-                             * (ppm_filament_center * 1e-6); // [] --> [m3]
-    double moles_per_m3 = environment_pressure / (R * environment_temperature); //[mol/m3]
+                             * filament_center_concentration_; // [] --> [m3]
+    double moles_per_m3 = environment_pressure / (constant::R * environment_temperature); //[mol/m3]
     filament_num_moles_of_gas_ = filament_volume * moles_per_m3; //[moles_target_gas/filament] This is a CTE parameter!!
 }
 
@@ -51,28 +63,34 @@ FilamentModel::ConcentrationGrid::Ptr FilamentModel::initConcentrationGrid()
     // if the background value is not 0, it must be specified here
     ConcentrationGrid::Ptr grid = ConcentrationGrid::create();
 
-    grid->insertMeta("cell_size", openvdb::DoubleMetadata(cell_size));
+    grid->insertMeta("cell_size", openvdb::DoubleMetadata(cell_size_));
 
     return grid;
+}
+
+const std::list<Filament> & FilamentModel::getFilaments() const
+{
+    return filaments_;
 }
 
 void FilamentModel::increment(double time_step)
 {
     env_model_ = simulator->getEnvironmentModel();
+    wind_model_ = simulator->getWindModel();
 
     addNewFilaments(time_step);
     updateGasConcentrationFromFilaments();
-    //publishMarkers();
-    //updateFilamentsLocation();
+    updateFilamentLocations(time_step);
 
     env_model_.reset();
+    wind_model_.reset();
 }
 
 openvdb::Coord FilamentModel::toCoord(const Eigen::Vector3d &p) const
 {
-    return openvdb::Coord(p[0] / cell_size,
-                          p[1] / cell_size,
-                          p[2] / cell_size);
+    return openvdb::Coord(p[0] / cell_size_,
+                          p[1] / cell_size_,
+                          p[2] / cell_size_);
 }
 
 void FilamentModel::addNewFilaments(double time_step)
@@ -114,7 +132,7 @@ void FilamentModel::updateGasConcentration(Filament &filament)
     // To avoid resolution problems, we evaluate each filament according to the minimum between:
     // the env_cell_size and filament_sigma. This way we ensure a filament is always well evaluated (not only one point).
 
-    double grid_size = std::min(cell_size, filament.sigma); // [m] grid size to evaluate the filament
+    double grid_size = std::min(cell_size_, filament.sigma); // [m] grid size to evaluate the filament
         // Compute at which increments the Filament has to be evaluated.
         // If the sigma of the Filament is very big (i.e. the Filament is very flat), the use the world's cell_size.
         // If the Filament is very small (i.e in only spans one or few world cells), then use increments equal to sigma
@@ -180,6 +198,87 @@ void FilamentModel::updateGasConcentrationFromFilaments()
 
     for (Filament &filament : filaments_)
         updateGasConcentration(filament);
+}
+
+void FilamentModel::updateFilamentLocations(double time_step)
+{
+    for (auto it = filaments_.begin(); it != filaments_.end();)
+    {
+        if (updateFilamentLocation(*it, time_step))
+            it = filaments_.erase(it);
+        else
+            ++it;
+    }
+}
+
+//Update the filaments location in the 3D environment
+// According to Farrell Filament model, a filament is afected by three components of the wind flow.
+// 1. Va (large scale wind) -> Advection (Va) -> Movement of a filament as a whole by wind) -> from CFD
+// 2. Vm (middle scale wind)-> Movement of the filament with respect the center of the "plume" -> modeled as white noise
+// 3. Vd (small scale wind) -> Difussion or change of the filament shape (growth with time)
+// We also consider Gravity and Bouyant Forces given the gas molecular mass
+bool FilamentModel::updateFilamentLocation(Filament &filament, double time_step)
+{
+    Eigen::Vector3d new_position;
+
+    // 1. Simulate Advection (Va)
+    // Large scale wind-eddies -> Movement of a filament as a whole by wind
+    // --------------------------------------------------------------------
+    new_position = filament.position + time_step * wind_model_->getWindVelocityAt(filament.position);
+
+    switch (env_model_->getOccupancy(new_position))
+    {
+    case Occupancy::Free:
+        // Free and valid location... update filament position
+        filament.position = new_position;
+        break;
+    case Occupancy::Outlet:
+        // The location corresponds to an outlet! Delete filament!
+        return true;
+    default:
+        // The location falls in an obstacle -> Illegal movement (Do not apply advection)
+        break;
+    }
+
+    // 2. Simulate Gravity & Bouyant Force
+    // -----------------------------------
+
+    // Approximation from "Terminal Velocity of a Bubble Rise in a Liquid Column",
+    // World Academy of Science, Engineering and Technology 28 2007
+    double terminal_buoyancy_velocity_z = // TODO *d^2 is missing (d = bubble diameter)
+            (constant::g * relative_gas_density_ * filament_center_concentration_) // [m/s2] * [kg/m3] * [] = [kg/s2m2]
+            / (18.0 * constant::dynamic_viscosity_air); // [kg/(m*s)] --> [1/(m*s)]
+    Eigen::Vector3d terminal_buoyancy_velocity(
+                0,
+                0,
+                terminal_buoyancy_velocity_z);
+
+    new_position = filament.position + terminal_buoyancy_velocity * time_step;
+
+    if (env_model_->getOccupancy(new_position) == Occupancy::Free)
+        filament.position = new_position;
+
+    // 3. Add some variability (stochastic process)
+    // Vm (middle scale wind)-> Movement of the filament with respect to the
+    // center of the "plume" -> modeled as Gaussian white noise
+    // ---------------------------------------------------------------------
+    Eigen::Vector3d vec_random = Eigen::Vector3d::NullaryExpr([&]() { return filament_stochastic_movement_distribution_(random_engine_); });
+    new_position = filament.position + vec_random;
+
+    if (env_model_->getOccupancy(new_position) == Occupancy::Free)
+        filament.position = new_position;
+
+    // 4. Filament growth with time (this affects the posterior estimation of
+    //                               gas concentration at each cell)
+    // Vd (small scale wind eddies) --> Difussion or change of the filament
+    //                                  shape (growth with time)
+    // R = sigma of a 3D gaussian --> Increasing sigma with time
+    // ------------------------------------------------------------------------
+    filament.age += time_step; // TODO Original code used sim_time - filaments[i].birth_time
+    filament.sigma = std::sqrt(filament_initial_std_pow2_ + filament_growth_gamma_ * filament.age);
+    //           m =      sqrt([m2]                       + [m2/s]                 * [s]         )
+
+    return false;
 }
 
 } // namespace gaden

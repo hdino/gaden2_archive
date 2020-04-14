@@ -65,14 +65,19 @@ bool OpenVdbEnvironmentModel::hasObstacleBetweenPoints(
     return false;
 }
 
+Occupancy OpenVdbEnvironmentModel::getOccupancy(const Eigen::Vector3d &p) const
+{
+    return getOccupancy(toCoord(p));
+}
+
 // Check if a given 3D position falls in:
 // Occupancy::Free      free space
-// Occupancy::Obstacle  obstacle, wall or outside the environment
-// Occupancy::Outlet    outlet
+// Occupancy::Obstacle  obstacle / wall
+// Occupancy::Outlet    outlet or outside the environment
 Occupancy OpenVdbEnvironmentModel::getOccupancy(const openvdb::Coord &coord) const
 {
     if (!bounding_box_.isInside(coord))
-        return Occupancy::Occupied;
+        return Occupancy::Outlet;
 
     return static_cast<Occupancy>(accessor_.getValue(coord));
 }
