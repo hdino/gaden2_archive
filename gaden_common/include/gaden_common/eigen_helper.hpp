@@ -1,6 +1,7 @@
 #ifndef GADEN_COMMON_EIGEN_HELPER_HPP_INCLUDED
 #define GADEN_COMMON_EIGEN_HELPER_HPP_INCLUDED
 
+#include <sstream>
 #include <string>
 
 #include <Eigen/Core>
@@ -25,6 +26,16 @@ inline std::string toString(const Eigen::Matrix<T, 3, 1> &vec, size_t indention 
 namespace gaden::eigen_helper {
 
 Eigen::Vector3d getVector3dFromYaml(const YAML::Node &sequence);
+
+template <typename T>
+bool getFromStream(std::stringstream &stream, Eigen::Matrix<T, 3, 1> &vector)
+{
+    bool success = true;
+    success &= static_cast<bool>(stream >> vector[0]);
+    success &= static_cast<bool>(stream >> vector[1]);
+    success &= static_cast<bool>(stream >> vector[2]);
+    return success;
+}
 
 } // namespace gaden::eigen_helper
 

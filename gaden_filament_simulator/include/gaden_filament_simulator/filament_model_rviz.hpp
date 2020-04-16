@@ -17,12 +17,15 @@ class FilamentModelRvizVisualisation
 public:
     FilamentModelRvizVisualisation(std::shared_ptr<rclcpp::Node> ros_node,
                                    std::shared_ptr<FilamentModel> filament_model,
-                                   const std::string &rviz_frame_id, double scale,
+                                   const std::string &rviz_frame_id,
+                                   double scale,
                                    rl::Logger &logger);
 
     void publish();
 
 private:
+    rl::Logger logger_;
+
     std::shared_ptr<rclcpp::Node> ros_node_;
     std::shared_ptr<FilamentModel> filament_model_;
 

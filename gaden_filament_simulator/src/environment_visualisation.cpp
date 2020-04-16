@@ -1,4 +1,5 @@
 #include <gaden_common/inline_environment.hpp>
+#include <gaden_common/openvdb_box.hpp>
 #include <gaden_filament_simulator/environment_visualisation.hpp>
 #include <gaden_filament_simulator/simulator_config.hpp>
 
@@ -12,6 +13,8 @@ visualization_msgs::msg::MarkerArray getInlineEnvironmentAsMarkerArray(const YAM
                                                                        const std::string &fixed_frame,
                                                                        rl::Logger &logger)
 {
+    double cell_size = env["cell_size"].as<double>();
+
     YAML::Node inline_env = env["inline_environment"];
 
     visualization_msgs::msg::MarkerArray marker_array;
@@ -22,8 +25,10 @@ visualization_msgs::msg::MarkerArray getInlineEnvironmentAsMarkerArray(const YAM
         std::string object_type = object["type"].as<std::string>();
         if (object_type == "box")
         {
-            ColoredBox box = getColoredBox(object);
-            marker_array.markers.push_back(getAsMarker(box, id_counter, stamp, fixed_frame));
+            //ColoredBox box = getColoredBox(object);
+            open_vdb::ColoredBox box(object, cell_size);
+            marker_array.markers.push_back(box.getAsMarker(id_counter, stamp, fixed_frame));
+            //marker_array.markers.push_back(getAsMarker(box, id_counter, stamp, fixed_frame));
         }
         else
             logger.warn() << "Unrecognised object type: " << object_type;

@@ -58,7 +58,7 @@ int main(int argc, char **argv)
 
     auto filament_visualisation = std::make_shared<gaden::FilamentModelRvizVisualisation>(
                 ros_node, gas_dispersion_model, config.visualisation.fixed_frame,
-                gas_dispersion_model->getCellSize());
+                gas_dispersion_model->getCellSize() * 10, logger);
 
     //rclcpp::Logger logger = ros_node->get_logger();
 

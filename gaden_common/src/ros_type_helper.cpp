@@ -58,6 +58,15 @@ geometry_msgs::msg::Vector3 getVector3(double value)
     return vector;
 }
 
+geometry_msgs::msg::Vector3 getVector3From(const Eigen::Vector3d &v)
+{
+    geometry_msgs::msg::Vector3 vector;
+    vector.x = v[0];
+    vector.y = v[1];
+    vector.z = v[2];
+    return vector;
+}
+
 geometry_msgs::msg::Point getPoint(double x, double y, double z)
 {
     geometry_msgs::msg::Point point;

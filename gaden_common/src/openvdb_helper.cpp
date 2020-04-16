@@ -4,6 +4,14 @@
 
 namespace gaden {
 
+std::string toString(const openvdb::Coord &coord, size_t indention)
+{
+    (void)indention;
+    return "[" + std::to_string(coord.x()) + ", "
+               + std::to_string(coord.y()) + ", "
+               + std::to_string(coord.z()) + "]";
+}
+
 void initialiseOpenVdb()
 {
     static bool openvdb_initialised = false;

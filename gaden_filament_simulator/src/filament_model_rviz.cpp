@@ -4,10 +4,14 @@
 
 namespace gaden {
 
-FilamentModelRvizVisualisation::FilamentModelRvizVisualisation(std::shared_ptr<rclcpp::Node> ros_node,
+FilamentModelRvizVisualisation::FilamentModelRvizVisualisation(
+        std::shared_ptr<rclcpp::Node> ros_node,
         std::shared_ptr<FilamentModel> filament_model,
-        const std::string &rviz_frame_id, double scale, rl::Logger &logger)
-    : ros_node_(ros_node)
+        const std::string &rviz_frame_id,
+        double scale,
+        rl::Logger &logger)
+    : logger_(logger.getChild("FilamentModelRviz"))
+    , ros_node_(ros_node)
     , filament_model_(filament_model)
     , publisher_(ros_node_->create_publisher<visualization_msgs::msg::Marker>("filament_visualisation", 1))
 {
@@ -23,7 +27,8 @@ FilamentModelRvizVisualisation::FilamentModelRvizVisualisation(std::shared_ptr<r
 
 void FilamentModelRvizVisualisation::publish()
 {
-    static std_msgs::msg::ColorRGBA colour_blue = ros_type::getColor(0, 0, 1);
+    //static std_msgs::msg::ColorRGBA colour_blue = ros_type::getColor(0, 0, 1);
+    static std_msgs::msg::ColorRGBA colour_red = ros_type::getColor(1, 0, 0);
 
     marker_.points.clear();
     marker_.colors.clear();
@@ -32,10 +37,10 @@ void FilamentModelRvizVisualisation::publish()
     for (const Filament &filament : filament_model_->getFilaments())
     {
         marker_.points.push_back(ros_type::getPointFrom(filament.position));
-        marker_.colors.push_back(colour_blue);
+        marker_.colors.push_back(colour_red);
     }
 
-
+    logger_.info() << "Points: " << marker_.points.size() << " Colors: " << marker_.colors.size();
 
     publisher_->publish(marker_);
 }

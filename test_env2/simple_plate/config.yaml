@@ -8,12 +8,12 @@ environment:
     objects:
       - identifier: ground_plate
         type: box
-        origin: [-50, -25, -1]
-        size: [100, 50, 1]
+        min: [-50, -25, -1]
+        max: [ 50,  25,  0]
         color: [0.5, 0.5, 0.5]
   bounding_box:
-    origin: [-50, -25, -1]
-    size: [100, 50, 50]
+    min: [-50, -25, -1]
+    max: [ 50,  25, 50]
 
 gas_sources:
   - position: [-45, 0, 1]

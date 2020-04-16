@@ -1,3 +1,4 @@
+#include <gaden_common/grid_helper.hpp>
 #include <gaden_common/math_helper.h>
 #include <gaden_preprocessing/stl_to_grid.h>
 #include <gaden_preprocessing/vector_helper.h>
@@ -19,12 +20,12 @@ void addStlToGrid(const std::vector<StlFacet> &facets,
 
     for (const StlFacet &facet : facets)
     {
-        auto vertex_cell_coordinates = getCellCoordinates(facet.vertices, cell_size);
+        auto vertex_cell_coordinates = grid_helper::getCellCoordinates(facet.vertices, cell_size);
 
         auto cell = getElementWiseMinMax(vertex_cell_coordinates);
 
         openvdb::Vec3s continuous_max = getElementWiseMax(facet.vertices);
-        openvdb::Vec3s continuous_max_grid_deviation = getGridDeviation(continuous_max, cell_size);
+        openvdb::Vec3s continuous_max_grid_deviation = grid_helper::getGridDeviation(continuous_max, cell_size);
 
         Vec3Bool limit(
             Tolerant(continuous_max_grid_deviation.x()) == 0

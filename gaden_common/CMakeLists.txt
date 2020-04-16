@@ -25,6 +25,7 @@ add_library(gaden_common
   src/grid_to_marker.cpp
   src/inline_environment.cpp
   src/occupancy_grid.cpp
+  src/openvdb_box.cpp
   src/openvdb_helper.cpp
   src/ros_parameters.cpp
   src/ros_type_helper.cpp
@@ -68,6 +69,22 @@ install(
 install(
   TARGETS gaden_common
   EXPORT export_gaden_common
+  LIBRARY DESTINATION lib
+  ARCHIVE DESTINATION lib
+  RUNTIME DESTINATION bin
+  INCLUDES DESTINATION include
+)
+
+add_executable(gaden_playground
+  src/playground.cpp
+)
+
+target_link_libraries(gaden_playground
+  gaden_common
+)
+
+install(
+  TARGETS gaden_playground
   LIBRARY DESTINATION lib
   ARCHIVE DESTINATION lib
   RUNTIME DESTINATION bin

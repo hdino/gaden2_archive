@@ -5,7 +5,7 @@
 #include <string>
 
 #include <Eigen/Core>
-#include <openvdb/math/Vec3.h>
+#include <openvdb/Types.h>
 #include <yaml-cpp/yaml.h>
 
 namespace gaden {
@@ -17,6 +17,8 @@ std::string toString(const openvdb::math::Vec3<T> &vector)
 {
     return vector.str();
 }
+
+std::string toString(const openvdb::Coord &coord, size_t indention = 0);
 
 } // namespace gaden
 
@@ -45,7 +47,13 @@ openvdb::math::Vec3<T> getVec3FromYaml(const YAML::Node &sequence)
 template <typename T>
 openvdb::math::Vec3<T> fromEigen(const Eigen::Matrix<T, 3, 1> &v)
 {
-    openvdb::math::Vec3<T>(v[0], v[1], v[2]);
+    return openvdb::math::Vec3<T>(v[0], v[1], v[2]);
+}
+
+template <typename T>
+Eigen::Matrix<T, 3, 1> toEigen(const openvdb::math::Vec3<T> &v)
+{
+    return Eigen::Matrix<T, 3, 1>(v.x(), v.y(), v.z());
 }
 
 //template <typename TOpenVdb, typename TEigen>

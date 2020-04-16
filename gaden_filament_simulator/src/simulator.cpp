@@ -4,6 +4,8 @@
 #include <gaden_filament_simulator/simulator_config.hpp>
 #include <gaden_filament_simulator/wind_model.hpp>
 
+#include <thread>
+
 namespace gaden {
 
 struct Simulator::MakeConstructorPublic : public Simulator {
@@ -42,7 +44,7 @@ Simulator::Simulator(SimulatorConfig &config,
 {
     // load configuration parameters
     time_step_ = 0.2;
-    double end_time = 10.0;
+    double end_time = 120.0;
 
     // initialise internal state
     current_sim_step_ = 0;
@@ -84,6 +86,9 @@ bool Simulator::simulate()
 
     //sim_time_ += time_step_;
     ++current_sim_step_;
+
+    std::this_thread::sleep_for(std::chrono::milliseconds(unsigned(time_step_ * 500)));
+
     return true;
 }
 

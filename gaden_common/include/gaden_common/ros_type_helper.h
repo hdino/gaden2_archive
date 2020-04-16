@@ -23,6 +23,7 @@ std_msgs::msg::ColorRGBA getColorFromYaml(const YAML::Node &parent);
 geometry_msgs::msg::Point getPositionFromYaml(const YAML::Node &parent);
 
 geometry_msgs::msg::Vector3 getVector3(double value);
+geometry_msgs::msg::Vector3 getVector3From(const Eigen::Vector3d &v);
 
 geometry_msgs::msg::Point getPoint(double x, double y, double z);
 geometry_msgs::msg::Point getPoint(double value);

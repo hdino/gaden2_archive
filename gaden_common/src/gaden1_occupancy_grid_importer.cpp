@@ -1,5 +1,7 @@
+#include <gaden_common/eigen_helper.hpp>
 #include <gaden_common/file_read_helper.h>
 #include <gaden_common/gaden1_occupancy_grid_importer.h>
+#include <gaden_common/grid_helper.hpp>
 #include <gaden_common/occupancy_grid.h>
 #include <gaden_common/openvdb_helper.h>
 
@@ -8,6 +10,8 @@
 #include <fstream>
 #include <sstream>
 #include <system_error>
+
+#include <Eigen/Core>
 
 namespace gaden {
 
@@ -33,13 +37,14 @@ OccupancyGrid::Ptr importOccupancyGridFromGaden1(const std::string &filename,
     //     #cell_size(m) 0.1000
     std::stringstream stream_line;
 
-    openvdb::Vec3d env_min, env_max;
+    //openvdb::Vec3d env_min, env_max;
+    Eigen::Vector3d env_min, env_max;
     openvdb::math::Vec3<size_t> num_cells;
     double cell_size;
 
     if (!file_read_helper::getLineAndSkipStart(
                 file_stream, "#env_min(m) ", stream_line, logger)) return grid;
-    if (!openvdb_helper::getFromStream(stream_line, env_min))
+    if (!eigen_helper::getFromStream(stream_line, env_min))
     {
         logger.error() << "env_min line invalid in " << filename;
         return grid;
@@ -47,7 +52,7 @@ OccupancyGrid::Ptr importOccupancyGridFromGaden1(const std::string &filename,
 
     if (!file_read_helper::getLineAndSkipStart(
                 file_stream, "#env_max(m) ", stream_line, logger)) return grid;
-    if (!openvdb_helper::getFromStream(stream_line, env_max))
+    if (!eigen_helper::getFromStream(stream_line, env_max))
     {
         logger.error() << "env_max line invalid in " << filename;
         return grid;
@@ -70,18 +75,21 @@ OccupancyGrid::Ptr importOccupancyGridFromGaden1(const std::string &filename,
     }
 
     logger.info() << "Finished reading metadata:"
-                  << "\n    env_min:   " << env_min.str()
-                  << "\n    env_max:   " << env_max.str()
+                  << "\n    env_min:   " << toString(env_min)
+                  << "\n    env_max:   " << toString(env_max)
                   << "\n    num_cells: " << num_cells.str()
                   << "\n    cell_size: " << cell_size;
 
     grid = createGrid(cell_size);
     auto grid_accessor = grid->getAccessor();
 
-    openvdb::Vec3i cell_index_min = env_min / cell_size;
-    openvdb::Vec3i cell_index_max = env_max / cell_size;
-    logger.info() << "Minimum cell index: " << cell_index_min.str();
-    logger.info() << "Maximum cell index: " << cell_index_max.str();
+
+    //openvdb::Vec3i cell_index_min = getCellCoordinates(env_min, cell_size);
+    //openvdb::Vec3i cell_index_max = getCellCoordinates(env_max, cell_size);
+    openvdb::Coord cell_index_min = grid_helper::getCellCoordinates(env_min, cell_size);
+    openvdb::Coord cell_index_max = grid_helper::getCellCoordinates(env_max, cell_size);
+    logger.info() << "Minimum cell index: " << toString(cell_index_min);
+    logger.info() << "Maximum cell index: " << toString(cell_index_max);
 
 //    std::array<std::string, 4> header_lines;
 //    size_t i;

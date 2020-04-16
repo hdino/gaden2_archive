@@ -29,7 +29,7 @@ public:
     const std::list<Filament> & getFilaments() const;
 
 private:
-    openvdb::Coord toCoord(const Eigen::Vector3d &p) const;
+    //openvdb::Coord toCoord(const Eigen::Vector3d &p) const;
 
     ConcentrationGrid::Ptr initConcentrationGrid();
 
@@ -38,8 +38,8 @@ private:
     void updateGasConcentrationFromFilaments();
     void updateGasConcentration(Filament &filament);
 
-    void updateFilamentLocations(double time_step);
-    bool updateFilamentLocation(Filament &filament, double time_step); // returns true if the filament became invalid
+    void updateFilamentPositions(double time_step);
+    bool updateFilamentPosition(Filament &filament, double time_step); // returns true if the filament became invalid
 
     ConcentrationGrid::Ptr concentration_grid_;
     ConcentrationGrid::Accessor concentration_;

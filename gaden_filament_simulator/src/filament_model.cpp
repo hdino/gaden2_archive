@@ -1,3 +1,5 @@
+#include <gaden_common/eigen_helper.hpp> // included to print vectors (for debugging)
+#include <gaden_common/grid_helper.hpp>
 #include <gaden_common/openvdb_helper.h>
 #include <gaden_filament_simulator/environment_model.hpp>
 #include <gaden_filament_simulator/filament_model.hpp>
@@ -79,24 +81,25 @@ void FilamentModel::increment(double time_step)
     wind_model_ = simulator->getWindModel();
 
     addNewFilaments(time_step);
-    updateGasConcentrationFromFilaments();
-    updateFilamentLocations(time_step);
+    //updateGasConcentrationFromFilaments();
+    updateFilamentPositions(time_step);
 
     env_model_.reset();
     wind_model_.reset();
 }
 
-openvdb::Coord FilamentModel::toCoord(const Eigen::Vector3d &p) const
-{
-    return openvdb::Coord(p[0] / cell_size_,
-                          p[1] / cell_size_,
-                          p[2] / cell_size_);
-}
+//openvdb::Coord FilamentModel::toCoord(const Eigen::Vector3d &p) const
+//{
+//    return openvdb::Coord(p[0] / cell_size_,
+//                          p[1] / cell_size_,
+//                          p[2] / cell_size_);
+//}
 
 void FilamentModel::addNewFilaments(double time_step)
 {
     for (const GasSource &gas_source : simulator->getGasSources())
     {
+        // TODO Make sure that the number of filaments is met for a period of several seconds
         unsigned num_filaments = time_step * gas_source.num_filaments_per_second;
         unsigned filaments_to_release;
         if (variable_filament_rate_)
@@ -106,6 +109,8 @@ void FilamentModel::addNewFilaments(double time_step)
         }
         else
             filaments_to_release = num_filaments;
+
+        logger.info() << "Adding " << filaments_to_release << " new filaments for gas source at " << toString(gas_source.position);
 
         for (unsigned i = 0; i < filaments_to_release; ++i)
         {
@@ -119,6 +124,8 @@ void FilamentModel::addNewFilaments(double time_step)
             filaments_.push_back(filament);
         }
     }
+
+    logger.info() << "Filaments after addNewFilaments: " << filaments_.size();
 }
 
 // Here we estimate the gas concentration on each cell of the 3D env
@@ -180,7 +187,7 @@ void FilamentModel::updateGasConcentration(Filament &filament)
                 } // TODO Note that the simulator's behaviour has changed here. In the original code nothing happened if the path is obstructed.
 
                 // Get 3D cell of the evaluated point
-                openvdb::Coord cell_coord = toCoord(p_eval);
+                openvdb::Coord cell_coord = grid_helper::getCellCoordinates(p_eval, cell_size_); //toCoord(p_eval);
 
                 // Accumulate concentration in corresponding env_cell
                 // TODO Support both ppm and moles as gas concentration unit?
@@ -200,11 +207,11 @@ void FilamentModel::updateGasConcentrationFromFilaments()
         updateGasConcentration(filament);
 }
 
-void FilamentModel::updateFilamentLocations(double time_step)
+void FilamentModel::updateFilamentPositions(double time_step)
 {
     for (auto it = filaments_.begin(); it != filaments_.end();)
     {
-        if (updateFilamentLocation(*it, time_step))
+        if (updateFilamentPosition(*it, time_step))
             it = filaments_.erase(it);
         else
             ++it;
@@ -217,25 +224,31 @@ void FilamentModel::updateFilamentLocations(double time_step)
 // 2. Vm (middle scale wind)-> Movement of the filament with respect the center of the "plume" -> modeled as white noise
 // 3. Vd (small scale wind) -> Difussion or change of the filament shape (growth with time)
 // We also consider Gravity and Bouyant Forces given the gas molecular mass
-bool FilamentModel::updateFilamentLocation(Filament &filament, double time_step)
+bool FilamentModel::updateFilamentPosition(Filament &filament, double time_step)
 {
+    //logger.info() << "Updating position of filament at " << toString(filament.position);
+
     Eigen::Vector3d new_position;
 
     // 1. Simulate Advection (Va)
     // Large scale wind-eddies -> Movement of a filament as a whole by wind
     // --------------------------------------------------------------------
     new_position = filament.position + time_step * wind_model_->getWindVelocityAt(filament.position);
+    //logger.info() << "Position after advection: " << toString(new_position);
 
     switch (env_model_->getOccupancy(new_position))
     {
     case Occupancy::Free:
         // Free and valid location... update filament position
+        //logger.info("Position is free");
         filament.position = new_position;
         break;
     case Occupancy::Outlet:
         // The location corresponds to an outlet! Delete filament!
+        logger.info("Position is outlet");
         return true;
     default:
+        logger.info("Position is occupied, do not apply advection");
         // The location falls in an obstacle -> Illegal movement (Do not apply advection)
         break;
     }
@@ -255,8 +268,13 @@ bool FilamentModel::updateFilamentLocation(Filament &filament, double time_step)
 
     new_position = filament.position + terminal_buoyancy_velocity * time_step;
 
+    //logger.info() << "Position after gravity and bouyant force: " << toString(new_position);
+
     if (env_model_->getOccupancy(new_position) == Occupancy::Free)
+    {
+        //logger.info("Applying it");
         filament.position = new_position;
+    }
 
     // 3. Add some variability (stochastic process)
     // Vm (middle scale wind)-> Movement of the filament with respect to the
@@ -265,8 +283,13 @@ bool FilamentModel::updateFilamentLocation(Filament &filament, double time_step)
     Eigen::Vector3d vec_random = Eigen::Vector3d::NullaryExpr([&]() { return filament_stochastic_movement_distribution_(random_engine_); });
     new_position = filament.position + vec_random;
 
+    //logger.info() << "Position after stochastic process: " << toString(new_position);
+
     if (env_model_->getOccupancy(new_position) == Occupancy::Free)
+    {
+        //logger.info("Applying it");
         filament.position = new_position;
+    }
 
     // 4. Filament growth with time (this affects the posterior estimation of
     //                               gas concentration at each cell)
