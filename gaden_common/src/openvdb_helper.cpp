@@ -12,7 +12,7 @@ std::string toString(const openvdb::Coord &coord, size_t indention)
                + std::to_string(coord.z()) + "]";
 }
 
-void initialiseOpenVdb()
+bool initialiseOpenVdb()
 {
     static bool openvdb_initialised = false;
 
@@ -21,6 +21,8 @@ void initialiseOpenVdb()
         openvdb::initialize();
         openvdb_initialised = true;
     }
+
+    return true;
 }
 
 } // namespace gaden

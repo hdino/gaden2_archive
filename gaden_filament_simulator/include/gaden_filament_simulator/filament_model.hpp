@@ -4,7 +4,6 @@
 #include <list>
 #include <memory>
 #include <random>
-//#include <vector>
 
 #include <openvdb/openvdb.h>
 
@@ -12,44 +11,52 @@
 #include "gas_dispersion_model.hpp"
 #include "wind_model.hpp"
 
+namespace YAML {
+class Node;
+}
+
 namespace gaden {
+
+template <typename TGrid>
+class CacheGrid;
 
 class EnvironmentModel;
 
 class FilamentModel : public GasDispersionModel
 {
 public:
-    using ConcentrationGrid = openvdb::DoubleGrid;
+    FilamentModel(const YAML::Node &config, rl::Logger &parent_logger);
+    ~FilamentModel();
 
-    FilamentModel(double cell_size, rl::Logger &parent_logger);
+    void increment(double time_step, double total_sim_time);
 
-    void increment(double time_step);
-
-    inline double getCellSize() const { return cell_size_; }
     const std::list<Filament> & getFilaments() const;
 
+    double getConcentrationAt(const Eigen::Vector3d &position);
+
 private:
-    //openvdb::Coord toCoord(const Eigen::Vector3d &p) const;
+    void addNewFilaments(double time_step, double total_sim_time);
 
-    ConcentrationGrid::Ptr initConcentrationGrid();
+    //void updateGasConcentrationFromFilaments();
+    //void updateGasConcentration(Filament &filament);
 
-    void addNewFilaments(double time_step);
+    void updateFilamentPositions(double time_step, double total_sim_time);
 
-    void updateGasConcentrationFromFilaments();
-    void updateGasConcentration(Filament &filament);
+    enum class UpdatePositionResult { Okay, FilamentVanished };
+    UpdatePositionResult testAndSetPosition(Eigen::Vector3d &position, const Eigen::Vector3d &candidate);
+    UpdatePositionResult updateFilamentPosition(Filament &filament, double time_step, double total_sim_time);
 
-    void updateFilamentPositions(double time_step);
-    bool updateFilamentPosition(Filament &filament, double time_step); // returns true if the filament became invalid
+    double computeConcentrationAt(const Eigen::Vector3d &position);
 
-    ConcentrationGrid::Ptr concentration_grid_;
-    ConcentrationGrid::Accessor concentration_;
+    std::unique_ptr<CacheGrid<openvdb::DoubleGrid>> concentration_cache_;
 
     // random
-    std::mt19937 random_engine_;
+    //std::mt19937 random_engine_;
+    std::default_random_engine random_engine_;
     std::normal_distribution<double> filament_spawn_distribution_;
     std::normal_distribution<double> filament_stochastic_movement_distribution_;
 
-    double cell_size_; // [m] cell_size of the gas distribution
+    //double cell_size_; // [m] cell_size of the gas distribution
     double cell_num_moles_;
     double filament_num_moles_of_gas_;
 

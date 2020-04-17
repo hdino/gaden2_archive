@@ -5,6 +5,7 @@
 
 #include <gaden_common/occupancy_grid_type.h>
 #include <gaden_common/openvdb_box.hpp>
+#include <gaden_common/openvdb_coordinates.hpp>
 
 #include "environment_model.hpp"
 
@@ -24,15 +25,13 @@ public:
     Occupancy getOccupancy(const openvdb::Coord &coord) const;
 
 private:
-    //openvdb::Coord toCoord(const Eigen::Vector3d &p) const;
+    Occupancy getGridValueAt(const openvdb::Coord &coord) const;
 
     OccupancyGrid::Ptr grid_;
     OccupancyGrid::ConstAccessor accessor_;
-    //double cell_size_;
-    //openvdb::CoordBBox bounding_box_;
-    //Eigen::Vector3d bounding_box_origin_;
-    //Eigen::Vector3d bounding_box_size_;
+
     open_vdb::BoundingBox bounding_box_;
+    open_vdb::CoordinateTransformer coord_tf_;
 };
 
 } // namespace gaden

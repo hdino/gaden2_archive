@@ -15,7 +15,7 @@ public:
     GasDispersionModel(rl::Logger &parent_logger);
     virtual ~GasDispersionModel();
 
-    virtual void increment(double time_step) = 0;
+    virtual void increment(double time_step, double total_sim_time) = 0;
 
     void setSimulator(std::shared_ptr<Simulator> simulator);
 

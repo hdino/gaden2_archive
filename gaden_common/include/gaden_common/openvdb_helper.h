@@ -10,7 +10,9 @@
 
 namespace gaden {
 
-void initialiseOpenVdb();
+// The return value of initialiseOpenVdb has no meaning, it's always true and
+// just there to use the function in a constructor's member initialiser list.
+bool initialiseOpenVdb();
 
 template <typename T>
 std::string toString(const openvdb::math::Vec3<T> &vector)

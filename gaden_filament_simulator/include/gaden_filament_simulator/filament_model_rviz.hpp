@@ -21,6 +21,8 @@ public:
                                    double scale,
                                    rl::Logger &logger);
 
+    ~FilamentModelRvizVisualisation();
+
     void publish();
 
 private:

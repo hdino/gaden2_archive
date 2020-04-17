@@ -7,6 +7,8 @@ EnvironmentModel::EnvironmentModel(rl::Logger &parent_logger)
 {}
 
 EnvironmentModel::~EnvironmentModel()
-{}
+{
+    logger.info("Destructing...");
+}
 
 } // namespace gaden

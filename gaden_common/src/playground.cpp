@@ -1,28 +1,36 @@
 #include <iostream>
 
 #include <cmath>
-//#include <gaden_common/openvdb_box.hpp>
+#include <gaden_common/cache_grid.hpp>
+#include <gaden_common/eigen_helper.hpp>
+#include <rl_logging/std_logging.hpp>
+
+double generateValue(const Eigen::Vector3d &p)
+{
+    std::cout << "Generating at " << gaden::toString(p) << std::endl;
+    return p[0] + p[1] + p[2];
+}
 
 int main()
 {
     std::cout << "Playground" << std::endl;
 
+    //rl::Logger logger = rl::logging::StdLogger::create("main");
+
     double cell_size = 0.5;
 
-//    gaden::open_vdb::BoundingBox box(Eigen::Vector3d(-10, -10, -10),
-//                                     Eigen::Vector3d(10, 10, 10),
-//                                     cell_size);
+    gaden::CacheGrid<openvdb::DoubleGrid> grid(cell_size, &generateValue);
 
-    //std::cout << std::hexfloat;
-    for (unsigned i = 0; i < 23; ++i)
-    {
-        double x = -1.1 + i*0.1;
-        //Eigen::Vector3d v(x, 0, 0);
-        //openvdb::Coord cell = box.toCellCoord(v);
-        //std::cout << x << " - " << cell.x() << std::endl;
-        int cell = std::floor(x / cell_size);
-        std::cout << x << " : " << cell << " : " << int(x / cell_size) << std::endl;
-    }
+    Eigen::Vector3d pos(1, 1, 1);
+    std::cout << grid.getValue(pos) << std::endl;
+    std::cout << grid.getValue(pos) << std::endl;
+    pos[0] = 1.2;
+    std::cout << grid.getValue(pos) << std::endl;
+    pos[0] = 1.5;
+    std::cout << grid.getValue(pos) << std::endl;
+    std::cout << grid.getValue(pos) << std::endl;
+    grid.clear();
+    std::cout << grid.getValue(pos) << std::endl;
 
     return 0;
 }

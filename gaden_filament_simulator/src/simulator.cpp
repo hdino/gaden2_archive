@@ -73,10 +73,11 @@ bool Simulator::simulate()
 
     double sim_time = current_sim_step_ * time_step_;
 
-    logger_.info() << "Simulating... sim_time = " << sim_time;
+    if (current_sim_step_ % 10 == 0)
+        logger_.info() << "Simulating... sim_time = " << sim_time;
 
     wind_model_.lock()->increment(time_step_, sim_time);
-    gas_model_.lock()->increment(time_step_);
+    gas_model_.lock()->increment(time_step_, sim_time);
 
     //    if ( (sim.save_results==1) && (sim.sim_time>=sim.results_min_time) )
     //    {

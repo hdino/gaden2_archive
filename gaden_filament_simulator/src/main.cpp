@@ -1,5 +1,6 @@
 #include <rclcpp/rclcpp.hpp>
 #include <rl_logging/ros2_logging.hpp>
+#include <yaml-cpp/yaml.h>
 
 #include <gaden_common/occupancy_grid.h>
 //#include <gaden_filament_simulator/filament_simulator.h>
@@ -23,6 +24,7 @@ int main(int argc, char **argv)
 
     // 2. Load the configuration
     gaden::SimulatorConfig config = gaden::loadSimulatorConfig(ros_node);
+    YAML::Node yaml_config = YAML::LoadFile(config.base_config_file);
     logger.info() << "Configuration:\n    " << gaden::toString(config, 4);
 
     // 3. Generate the occupancy grid file, if required
@@ -44,10 +46,10 @@ int main(int argc, char **argv)
     auto env_model = std::make_shared<gaden::OpenVdbEnvironmentModel>(grid, logger);
 
     // 5. Create the gas dispersion model
-    auto gas_dispersion_model = std::make_shared<gaden::FilamentModel>(0.05, logger);
+    auto gas_dispersion_model = std::make_shared<gaden::FilamentModel>(yaml_config, logger);
 
     // 6. Create the wind model
-    auto wind_model = std::make_shared<gaden::InlineWindModel>();
+    auto wind_model = std::make_shared<gaden::InlineWindModel>(yaml_config, logger);
 
     // 7. Create the simulator
     auto simulator = gaden::Simulator::create(config,
@@ -58,52 +60,12 @@ int main(int argc, char **argv)
 
     auto filament_visualisation = std::make_shared<gaden::FilamentModelRvizVisualisation>(
                 ros_node, gas_dispersion_model, config.visualisation.fixed_frame,
-                gas_dispersion_model->getCellSize() * 10, logger);
-
-    //rclcpp::Logger logger = ros_node->get_logger();
-
-    // Wait preprocessing Node to finish?
-//    preprocessing_done = false;
-//    if(wait_preprocessing)
-//    {
-//        prepro_sub = n.subscribe("preprocessing_done", 1, &CFilamentSimulator::preprocessingCB, this);
-//        while(ros::ok() && !preprocessing_done)
-//        {
-//            ros::Duration(0.5).sleep();
-//            ros::spinOnce();
-//            if (verbose) ROS_INFO("[filament] Waiting for node GADEN_preprocessing to end.");
-//        }
-//    }
-
-    //Create simulator obj and initialize it
-    //CFilamentSimulator sim;
-    //gaden::FilamentSimulator sim;
-
-    // Initiate Random Number generator with current time
-    //srand(time(NULL)); // TODO Remove when all random functions use <random>
-
-    //--------------
-    // LOOP
-    //--------------
-    //ros::Rate r(100);
-    //rclcpp::Rate rate(100)
-    //while (ros::ok() && (sim.current_simulation_step<sim.numSteps) )
-//    while (rclcpp::ok() && sim.simulate())
-//    {
-//        //r.sleep();
-//        //ros::spinOnce();
-//        rclcpp::spin_some(ros_node);
-//    }
-//    while (ros::ok())
-//    {
-//        rclcpp::
-//    }
+                0.5, logger);
 
     while (rclcpp::ok() && simulator->simulate())
     {
         filament_visualisation->publish();
-        rclcpp::spin_some(ros_node);
+        if (rclcpp::ok()) // workaround, see https://github.com/ros2/rclcpp/issues/1066
+            rclcpp::spin_some(ros_node);
     }
-
-    //rclcpp::spin(ros_node);
 }

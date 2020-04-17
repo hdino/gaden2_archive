@@ -25,6 +25,11 @@ FilamentModelRvizVisualisation::FilamentModelRvizVisualisation(
     marker_.color.a = 1.0;
 }
 
+FilamentModelRvizVisualisation::~FilamentModelRvizVisualisation()
+{
+    logger_.info("Destructing");
+}
+
 void FilamentModelRvizVisualisation::publish()
 {
     //static std_msgs::msg::ColorRGBA colour_blue = ros_type::getColor(0, 0, 1);
@@ -40,7 +45,7 @@ void FilamentModelRvizVisualisation::publish()
         marker_.colors.push_back(colour_red);
     }
 
-    logger_.info() << "Points: " << marker_.points.size() << " Colors: " << marker_.colors.size();
+    //logger_.info() << "Points: " << marker_.points.size() << " Colors: " << marker_.colors.size();
 
     publisher_->publish(marker_);
 }

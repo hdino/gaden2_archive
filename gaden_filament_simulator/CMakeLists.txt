@@ -9,7 +9,6 @@ find_package(gaden_common REQUIRED)
 add_executable(filament_simulator
   src/environment_model.cpp
   src/environment_visualisation.cpp
-  src/filament.cpp
   src/filament_model.cpp
   src/filament_model_rviz.cpp
   src/filament_simulator.cpp

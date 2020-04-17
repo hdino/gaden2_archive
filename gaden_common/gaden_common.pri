@@ -18,6 +18,7 @@ SOURCES += \
     $$PWD/src/ros_type_helper.cpp
 
 HEADERS += \
+    $$PWD/include/gaden_common/cache_grid.hpp \
     $$PWD/include/gaden_common/cad_model.h \
     $$PWD/include/gaden_common/eigen_helper.hpp \
     $$PWD/include/gaden_common/file_read_helper.h \
@@ -33,6 +34,7 @@ HEADERS += \
     $$PWD/include/gaden_common/occupancy_grid.h \
     $$PWD/include/gaden_common/occupancy_grid_type.h \
     $$PWD/include/gaden_common/openvdb_box.hpp \
+    $$PWD/include/gaden_common/openvdb_coordinates.hpp \
     $$PWD/include/gaden_common/openvdb_helper.h \
     $$PWD/include/gaden_common/ros_parameters.h \
     $$PWD/include/gaden_common/ros_type_helper.h \

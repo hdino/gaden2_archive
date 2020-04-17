@@ -4,7 +4,6 @@ DEPENDPATH += $$PWD
 SOURCES += \
     $$PWD/src/environment_model.cpp \
     $$PWD/src/environment_visualisation.cpp \
-    $$PWD/src/filament.cpp \
     $$PWD/src/filament_model.cpp \
     $$PWD/src/filament_model_rviz.cpp \
     $$PWD/src/filament_simulator.cpp \
@@ -20,7 +19,6 @@ SOURCES += \
 HEADERS += \
     $$PWD/include/gaden_filament_simulator/environment_model.hpp \
     $$PWD/include/gaden_filament_simulator/environment_visualisation.hpp \
-    $$PWD/include/gaden_filament_simulator/filament.h \
     $$PWD/include/gaden_filament_simulator/filament.hpp \
     $$PWD/include/gaden_filament_simulator/filament_model.hpp \
     $$PWD/include/gaden_filament_simulator/filament_model_rviz.hpp \

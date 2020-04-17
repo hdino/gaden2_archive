@@ -1,3 +1,4 @@
+#include <gaden_common/cache_grid.hpp>
 #include <gaden_common/eigen_helper.hpp> // included to print vectors (for debugging)
 #include <gaden_common/grid_helper.hpp>
 #include <gaden_common/openvdb_helper.h>
@@ -10,21 +11,19 @@
 #include <cmath>
 
 #include <Eigen/Core>
+#include <yaml-cpp/yaml.h>
 
 namespace gaden {
 
 static constexpr double SQRT_8_X_PI_POW3 = std::sqrt(8 * std::pow(M_PI, 3)); // []
 
-FilamentModel::FilamentModel(double cell_size, rl::Logger &parent_logger)
+FilamentModel::FilamentModel(const YAML::Node &config, rl::Logger &parent_logger)
     : GasDispersionModel(parent_logger)
-    , concentration_grid_(initConcentrationGrid())
-    , concentration_(concentration_grid_->getAccessor())
     , random_engine_(std::random_device()())
-    , cell_size_(cell_size)
 {
-    logger.info() << "Cell size: " << cell_size_;
-
     // load configuration parameters
+    YAML::Node model_config = config["filament_model"];
+
     double environment_pressure = 1.0 * 101325.0; // [Pa]
     double environment_temperature = 298.0; // [K]
 
@@ -40,14 +39,17 @@ FilamentModel::FilamentModel(double cell_size, rl::Logger &parent_logger)
     filament_growth_gamma_ = 0.01; // [m2/s]
     filament_center_concentration_ = 20e-6; // [] --> ppm * 1e-6
 
+    double cell_size = model_config["cell_size"].as<double>();
+
+    // compute derived parameters
     double gas_specific_gravity = constant::specific_gravity::methane; // []
     relative_gas_density_ = constant::density_air * (constant::specific_gravity::air - gas_specific_gravity); // [kg/m3]
 
     //double filament_initial_vol = pow(6 * filament_initial_std, 3); // [m3] -> We approximate the infinite volume of the 3DGaussian as 6 sigmas.
-    double cell_vol = std::pow(cell_size, 3); //[m3] volume of a cell
+    //double cell_vol = std::pow(cell_size, 3); //[m3] volume of a cell
     //	filament_numMoles = (envPressure*filament_initial_vol)/(R*envTemperature);//[mol] Num of moles of Air in that volume
-    double num_moles_per_m3 = environment_pressure / (constant::R * environment_temperature); // [mol/m3]
-    cell_num_moles_ = cell_vol * num_moles_per_m3; //[mol] Num of moles of Air in that volume
+    //double num_moles_per_m3 = environment_pressure / (constant::R * environment_temperature); // [mol/m3]
+    //cell_num_moles_ = cell_vol * num_moles_per_m3; //[mol] Num of moles of Air in that volume
 
     // The moles of target_gas in a Filament are distributed following a 3D Gaussian
     // Given the ppm value at the center of the filament, we approximate the total number of gas moles in that filament.
@@ -56,50 +58,44 @@ FilamentModel::FilamentModel(double cell_size, rl::Logger &parent_logger)
                              * filament_center_concentration_; // [] --> [m3]
     double moles_per_m3 = environment_pressure / (constant::R * environment_temperature); //[mol/m3]
     filament_num_moles_of_gas_ = filament_volume * moles_per_m3; //[moles_target_gas/filament] This is a CTE parameter!!
+
+    // print configuration information
+    logger.info() << "Gas dispersion model: Filament model"
+                  << "\n  Cell size: " << cell_size;
+
+    // concentration cache
+    concentration_cache_ = std::make_unique<CacheGrid<openvdb::DoubleGrid>>(
+                cell_size,
+                [this](auto&& ...x) {
+                    return computeConcentrationAt(std::forward<decltype(x)>(x)...); });
 }
 
-FilamentModel::ConcentrationGrid::Ptr FilamentModel::initConcentrationGrid()
-{
-    initialiseOpenVdb();
-
-    // if the background value is not 0, it must be specified here
-    ConcentrationGrid::Ptr grid = ConcentrationGrid::create();
-
-    grid->insertMeta("cell_size", openvdb::DoubleMetadata(cell_size_));
-
-    return grid;
-}
+FilamentModel::~FilamentModel()
+{}
 
 const std::list<Filament> & FilamentModel::getFilaments() const
 {
     return filaments_;
 }
 
-void FilamentModel::increment(double time_step)
+void FilamentModel::increment(double time_step, double total_sim_time)
 {
     env_model_ = simulator->getEnvironmentModel();
     wind_model_ = simulator->getWindModel();
 
-    addNewFilaments(time_step);
-    //updateGasConcentrationFromFilaments();
-    updateFilamentPositions(time_step);
+    addNewFilaments(time_step, total_sim_time);
+    updateFilamentPositions(time_step, total_sim_time);
+    concentration_cache_->clear();
 
     env_model_.reset();
     wind_model_.reset();
 }
 
-//openvdb::Coord FilamentModel::toCoord(const Eigen::Vector3d &p) const
-//{
-//    return openvdb::Coord(p[0] / cell_size_,
-//                          p[1] / cell_size_,
-//                          p[2] / cell_size_);
-//}
-
-void FilamentModel::addNewFilaments(double time_step)
+void FilamentModel::addNewFilaments(double time_step, double total_sim_time)
 {
     for (const GasSource &gas_source : simulator->getGasSources())
     {
-        // TODO Make sure that the number of filaments is met for a period of several seconds
+        // TODO Make sure that the number of filaments is met for a period of several seconds?
         unsigned num_filaments = time_step * gas_source.num_filaments_per_second;
         unsigned filaments_to_release;
         if (variable_filament_rate_)
@@ -110,111 +106,53 @@ void FilamentModel::addNewFilaments(double time_step)
         else
             filaments_to_release = num_filaments;
 
-        logger.info() << "Adding " << filaments_to_release << " new filaments for gas source at " << toString(gas_source.position);
+        //logger.info() << "Adding " << filaments_to_release << " new filaments for gas source at " << toString(gas_source.position);
 
         for (unsigned i = 0; i < filaments_to_release; ++i)
         {
             // Set position of new filament within the specified radius around the gas source location
-            Eigen::Vector3d vec_random = Eigen::Vector3d::NullaryExpr([&]() { return filament_spawn_distribution_(random_engine_); });
+            Eigen::Vector3d vec_random = Eigen::Vector3d::NullaryExpr([&]() {
+                return filament_spawn_distribution_(random_engine_); });
+
             Eigen::Vector3d filament_position = gas_source.position + vec_random * filament_spawn_radius_;
 
-            Filament filament; // TODO Add constructor to use emplace
-            filament.position = filament_position;
-            filament.sigma = filament_initial_std_; // TODO Check
-            filaments_.push_back(filament);
+            filaments_.emplace_back(filament_position,
+                                    filament_initial_std_, // TODO Check if filament_initial_std_ is correct here
+                                    total_sim_time);
         }
     }
 
-    logger.info() << "Filaments after addNewFilaments: " << filaments_.size();
+    //logger.info() << "Filaments after addNewFilaments: " << filaments_.size();
 }
 
-// Here we estimate the gas concentration on each cell of the 3D env
-// based on the active filaments and their 3DGaussian shapes
-// For that we employ Farrell's Concentration Eq
-void FilamentModel::updateGasConcentration(Filament &filament)
-{
-    // We run over all the active filaments, and update the gas concentration of the cells that are close to them.
-    // Ideally a filament spreads over the entire environment, but in practice since filaments are modeled as 3Dgaussians
-    // We can stablish a cutt_off raduis of 3*sigma.
-    // To avoid resolution problems, we evaluate each filament according to the minimum between:
-    // the env_cell_size and filament_sigma. This way we ensure a filament is always well evaluated (not only one point).
-
-    double grid_size = std::min(cell_size_, filament.sigma); // [m] grid size to evaluate the filament
-        // Compute at which increments the Filament has to be evaluated.
-        // If the sigma of the Filament is very big (i.e. the Filament is very flat), the use the world's cell_size.
-        // If the Filament is very small (i.e in only spans one or few world cells), then use increments equal to sigma
-        //  in order to have several evaluations fall in the same cell.
-    double cell_volume = grid_size * grid_size * grid_size; // [m3]
-
-    unsigned num_evaluations = std::ceil(6.0 * filament.sigma / grid_size);
-        // How many times the Filament has to be evaluated depends on the final grid_size_m.
-        // The filament's grid size is multiplied by 6 because we evaluate it over +-3 sigma
-        // If the filament is very small (i.e. grid_size_m = sigma), then the filament is evaluated only 6 times
-        // If the filament is very big and spans several cells, then it has to be evaluated for each cell (which will be more than 6)
-
-    // EVALUATE IN ALL THREE AXIS
-    double sigma3 = 3.0 * filament.sigma; // [m]
-    double sigma_pow2 = filament.sigma * filament.sigma; // [m2]
-    double sigma_pow3 = sigma_pow2 * filament.sigma; // [m3]
-    double mol_per_m3 = filament_num_moles_of_gas_ / (SQRT_8_X_PI_POW3 * sigma_pow3); // [mol/m3]
-
-    Eigen::Array3d ijk; // should be unsigned, but double avoids a cast
-    for (ijk[0] = 0; ijk[0] <= num_evaluations; ++ijk[0])
-        for (ijk[1] = 0; ijk[1] <= num_evaluations; ++ijk[1])
-            for (ijk[2] = 0; ijk[2] <= num_evaluations; ++ijk[2])
-            {
-                Eigen::Vector3d p_offset = ijk * grid_size - sigma3; // [m]
-                // get point to evaluate
-                Eigen::Vector3d p_eval = filament.position + p_offset; // [m]
-
-                // Distance from evaluated_point to filament_center
-                double distance_pow2 = p_offset.squaredNorm(); // [m2]
-
-                // FARRELLS Eq.
-                //Evaluate the concentration of filament fil_i at given point
-                double num_moles_m3 = mol_per_m3 // [mol/m3]
-                        * exp(-distance_pow2 / (2 * sigma_pow2)); // [] --> [mol/m3]    TODO Improve variable names
-
-                // Multiply for the volume of the grid cell
-                double num_moles = num_moles_m3 * cell_volume; // [mol]
-
-                // Valid point? If either OUT of the environment, or through a wall, treat it as invalid
-                if (env_model_->hasObstacleBetweenPoints(filament.position, p_eval))
-                {
-                    // Point is not valid! Instead of ignoring it, add its concentration to the filament center location
-                    // This avoids "loosing" gas concentration as filaments get close to obstacles (e.g. the floor)
-                    p_eval = filament.position;
-                } // TODO Note that the simulator's behaviour has changed here. In the original code nothing happened if the path is obstructed.
-
-                // Get 3D cell of the evaluated point
-                openvdb::Coord cell_coord = grid_helper::getCellCoordinates(p_eval, cell_size_); //toCoord(p_eval);
-
-                // Accumulate concentration in corresponding env_cell
-                // TODO Support both ppm and moles as gas concentration unit?
-
-                // ppm version:
-                double num_ppm = (num_moles / cell_num_moles_) * 1e6;   //[ppm]
-                concentration_.modifyValue(cell_coord, [&](double &val) { val += num_ppm; });
-            }
-}
-
-void FilamentModel::updateGasConcentrationFromFilaments()
-{
-    // First, set all cells to 0.0 gas concentration (clear previous state)
-    concentration_grid_->clear();
-
-    for (Filament &filament : filaments_)
-        updateGasConcentration(filament);
-}
-
-void FilamentModel::updateFilamentPositions(double time_step)
+void FilamentModel::updateFilamentPositions(double time_step, double total_sim_time)
 {
     for (auto it = filaments_.begin(); it != filaments_.end();)
     {
-        if (updateFilamentPosition(*it, time_step))
+        if (updateFilamentPosition(*it, time_step, total_sim_time) == UpdatePositionResult::FilamentVanished)
             it = filaments_.erase(it);
         else
             ++it;
+    }
+}
+
+FilamentModel::UpdatePositionResult
+FilamentModel::testAndSetPosition(Eigen::Vector3d &position,
+                                  const Eigen::Vector3d &candidate)
+{
+    switch (env_model_->getOccupancy(candidate))
+    {
+    case Occupancy::Free:
+        // Free and valid location... update filament position
+        position = candidate;
+        return UpdatePositionResult::Okay;
+    case Occupancy::Outlet:
+        // The location corresponds to an outlet! Delete filament!
+        //logger.info() << "Filament reached outlet at " << toString(candidate);
+        return UpdatePositionResult::FilamentVanished;
+    default:
+        // The location falls in an obstacle --> illegal movement, do not apply it
+        return UpdatePositionResult::Okay;
     }
 }
 
@@ -224,10 +162,9 @@ void FilamentModel::updateFilamentPositions(double time_step)
 // 2. Vm (middle scale wind)-> Movement of the filament with respect the center of the "plume" -> modeled as white noise
 // 3. Vd (small scale wind) -> Difussion or change of the filament shape (growth with time)
 // We also consider Gravity and Bouyant Forces given the gas molecular mass
-bool FilamentModel::updateFilamentPosition(Filament &filament, double time_step)
+FilamentModel::UpdatePositionResult
+FilamentModel::updateFilamentPosition(Filament &filament, double time_step, double total_sim_time)
 {
-    //logger.info() << "Updating position of filament at " << toString(filament.position);
-
     Eigen::Vector3d new_position;
 
     // 1. Simulate Advection (Va)
@@ -236,22 +173,8 @@ bool FilamentModel::updateFilamentPosition(Filament &filament, double time_step)
     new_position = filament.position + time_step * wind_model_->getWindVelocityAt(filament.position);
     //logger.info() << "Position after advection: " << toString(new_position);
 
-    switch (env_model_->getOccupancy(new_position))
-    {
-    case Occupancy::Free:
-        // Free and valid location... update filament position
-        //logger.info("Position is free");
-        filament.position = new_position;
-        break;
-    case Occupancy::Outlet:
-        // The location corresponds to an outlet! Delete filament!
-        logger.info("Position is outlet");
-        return true;
-    default:
-        logger.info("Position is occupied, do not apply advection");
-        // The location falls in an obstacle -> Illegal movement (Do not apply advection)
-        break;
-    }
+    if (testAndSetPosition(filament.position, new_position) == UpdatePositionResult::FilamentVanished)
+        return UpdatePositionResult::FilamentVanished;
 
     // 2. Simulate Gravity & Bouyant Force
     // -----------------------------------
@@ -267,29 +190,23 @@ bool FilamentModel::updateFilamentPosition(Filament &filament, double time_step)
                 terminal_buoyancy_velocity_z);
 
     new_position = filament.position + terminal_buoyancy_velocity * time_step;
-
     //logger.info() << "Position after gravity and bouyant force: " << toString(new_position);
 
-    if (env_model_->getOccupancy(new_position) == Occupancy::Free)
-    {
-        //logger.info("Applying it");
-        filament.position = new_position;
-    }
+    if (testAndSetPosition(filament.position, new_position) == UpdatePositionResult::FilamentVanished)
+        return UpdatePositionResult::FilamentVanished;
 
     // 3. Add some variability (stochastic process)
     // Vm (middle scale wind)-> Movement of the filament with respect to the
     // center of the "plume" -> modeled as Gaussian white noise
     // ---------------------------------------------------------------------
-    Eigen::Vector3d vec_random = Eigen::Vector3d::NullaryExpr([&]() { return filament_stochastic_movement_distribution_(random_engine_); });
-    new_position = filament.position + vec_random;
+    Eigen::Vector3d vec_random = Eigen::Vector3d::NullaryExpr([&]() {
+        return filament_stochastic_movement_distribution_(random_engine_); });
 
+    new_position = filament.position + vec_random;
     //logger.info() << "Position after stochastic process: " << toString(new_position);
 
-    if (env_model_->getOccupancy(new_position) == Occupancy::Free)
-    {
-        //logger.info("Applying it");
-        filament.position = new_position;
-    }
+    if (testAndSetPosition(filament.position, new_position) == UpdatePositionResult::FilamentVanished)
+        return UpdatePositionResult::FilamentVanished;
 
     // 4. Filament growth with time (this affects the posterior estimation of
     //                               gas concentration at each cell)
@@ -297,11 +214,100 @@ bool FilamentModel::updateFilamentPosition(Filament &filament, double time_step)
     //                                  shape (growth with time)
     // R = sigma of a 3D gaussian --> Increasing sigma with time
     // ------------------------------------------------------------------------
-    filament.age += time_step; // TODO Original code used sim_time - filaments[i].birth_time
-    filament.sigma = std::sqrt(filament_initial_std_pow2_ + filament_growth_gamma_ * filament.age);
+    double filament_age = total_sim_time - filament.birth_time; // [s]
+    filament.sigma = std::sqrt(filament_initial_std_pow2_ + filament_growth_gamma_ * filament_age);
     //           m =      sqrt([m2]                       + [m2/s]                 * [s]         )
 
-    return false;
+    return UpdatePositionResult::Okay;
 }
+
+double FilamentModel::getConcentrationAt(const Eigen::Vector3d &position)
+{
+    return concentration_cache_->getValue(position);
+}
+
+double FilamentModel::computeConcentrationAt(const Eigen::Vector3d &position)
+{
+    return 1;
+}
+
+//// Here we estimate the gas concentration on each cell of the 3D env
+//// based on the active filaments and their 3DGaussian shapes
+//// For that we employ Farrell's Concentration Eq
+//void FilamentModel::updateGasConcentration(Filament &filament)
+//{
+//    // We run over all the active filaments, and update the gas concentration of the cells that are close to them.
+//    // Ideally a filament spreads over the entire environment, but in practice since filaments are modeled as 3Dgaussians
+//    // We can stablish a cutt_off raduis of 3*sigma.
+//    // To avoid resolution problems, we evaluate each filament according to the minimum between:
+//    // the env_cell_size and filament_sigma. This way we ensure a filament is always well evaluated (not only one point).
+
+//    double grid_size = std::min(cell_size_, filament.sigma); // [m] grid size to evaluate the filament
+//        // Compute at which increments the Filament has to be evaluated.
+//        // If the sigma of the Filament is very big (i.e. the Filament is very flat), the use the world's cell_size.
+//        // If the Filament is very small (i.e in only spans one or few world cells), then use increments equal to sigma
+//        //  in order to have several evaluations fall in the same cell.
+//    double cell_volume = grid_size * grid_size * grid_size; // [m3]
+
+//    unsigned num_evaluations = std::ceil(6.0 * filament.sigma / grid_size);
+//        // How many times the Filament has to be evaluated depends on the final grid_size_m.
+//        // The filament's grid size is multiplied by 6 because we evaluate it over +-3 sigma
+//        // If the filament is very small (i.e. grid_size_m = sigma), then the filament is evaluated only 6 times
+//        // If the filament is very big and spans several cells, then it has to be evaluated for each cell (which will be more than 6)
+
+//    // EVALUATE IN ALL THREE AXIS
+//    double sigma3 = 3.0 * filament.sigma; // [m]
+//    double sigma_pow2 = filament.sigma * filament.sigma; // [m2]
+//    double sigma_pow3 = sigma_pow2 * filament.sigma; // [m3]
+//    double mol_per_m3 = filament_num_moles_of_gas_ / (SQRT_8_X_PI_POW3 * sigma_pow3); // [mol/m3]
+
+//    Eigen::Array3d ijk; // should be unsigned, but double avoids a cast
+//    for (ijk[0] = 0; ijk[0] <= num_evaluations; ++ijk[0])
+//        for (ijk[1] = 0; ijk[1] <= num_evaluations; ++ijk[1])
+//            for (ijk[2] = 0; ijk[2] <= num_evaluations; ++ijk[2])
+//            {
+//                Eigen::Vector3d p_offset = ijk * grid_size - sigma3; // [m]
+//                // get point to evaluate
+//                Eigen::Vector3d p_eval = filament.position + p_offset; // [m]
+
+//                // Distance from evaluated_point to filament_center
+//                double distance_pow2 = p_offset.squaredNorm(); // [m2]
+
+//                // FARRELLS Eq.
+//                //Evaluate the concentration of filament fil_i at given point
+//                double num_moles_m3 = mol_per_m3 // [mol/m3]
+//                        * exp(-distance_pow2 / (2 * sigma_pow2)); // [] --> [mol/m3]    TODO Improve variable names
+
+//                // Multiply for the volume of the grid cell
+//                double num_moles = num_moles_m3 * cell_volume; // [mol]
+
+//                // Valid point? If either OUT of the environment, or through a wall, treat it as invalid
+//                if (env_model_->hasObstacleBetweenPoints(filament.position, p_eval))
+//                {
+//                    // Point is not valid! Instead of ignoring it, add its concentration to the filament center location
+//                    // This avoids "loosing" gas concentration as filaments get close to obstacles (e.g. the floor)
+//                    p_eval = filament.position;
+//                } // TODO Note that the simulator's behaviour has changed here. In the original code nothing happened if the path is obstructed.
+
+//                // Get 3D cell of the evaluated point
+//                openvdb::Coord cell_coord = grid_helper::getCellCoordinates(p_eval, cell_size_); //toCoord(p_eval);
+
+//                // Accumulate concentration in corresponding env_cell
+//                // TODO Support both ppm and moles as gas concentration unit?
+
+//                // ppm version:
+//                double num_ppm = (num_moles / cell_num_moles_) * 1e6;   //[ppm]
+//                concentration_.modifyValue(cell_coord, [&](double &val) { val += num_ppm; });
+//            }
+//}
+
+//void FilamentModel::updateGasConcentrationFromFilaments()
+//{
+//    // First, set all cells to 0.0 gas concentration (clear previous state)
+//    concentration_grid_->clear();
+
+//    for (Filament &filament : filaments_)
+//        updateGasConcentration(filament);
+//}
 
 } // namespace gaden

@@ -8,10 +8,11 @@
 
 namespace gaden {
 
-visualization_msgs::msg::MarkerArray getInlineEnvironmentAsMarkerArray(const YAML::Node &env,
-                                                                       const builtin_interfaces::msg::Time &stamp,
-                                                                       const std::string &fixed_frame,
-                                                                       rl::Logger &logger)
+visualization_msgs::msg::MarkerArray
+getInlineEnvironmentAsMarkerArray(const YAML::Node &env,
+                                  const builtin_interfaces::msg::Time &stamp,
+                                  const std::string &fixed_frame,
+                                  rl::Logger &logger)
 {
     double cell_size = env["cell_size"].as<double>();
 
@@ -25,10 +26,9 @@ visualization_msgs::msg::MarkerArray getInlineEnvironmentAsMarkerArray(const YAM
         std::string object_type = object["type"].as<std::string>();
         if (object_type == "box")
         {
-            //ColoredBox box = getColoredBox(object);
             open_vdb::ColoredBox box(object, cell_size);
-            marker_array.markers.push_back(box.getAsMarker(id_counter, stamp, fixed_frame));
-            //marker_array.markers.push_back(getAsMarker(box, id_counter, stamp, fixed_frame));
+            marker_array.markers.push_back(
+                        box.getAsMarker(id_counter, stamp, fixed_frame));
         }
         else
             logger.warn() << "Unrecognised object type: " << object_type;
@@ -52,12 +52,16 @@ EnvironmentVisualiser::EnvironmentVisualiser(const SimulatorConfig &config,
     {
         std::string environment_format = yaml_environment["format"].as<std::string>();
         if (environment_format == "inline")
-            marker_environment_ = getInlineEnvironmentAsMarkerArray(yaml_environment,
-                                                                    ros_node_->get_clock()->now(),
-                                                                    config.visualisation.fixed_frame,
-                                                                    logger_);
+        {
+            marker_environment_ = getInlineEnvironmentAsMarkerArray(
+                        yaml_environment,
+                        ros_node_->get_clock()->now(),
+                        config.visualisation.fixed_frame,
+                        logger_);
+        }
         else
-            throw std::runtime_error("Invalid environment format: " + environment_format);
+            throw std::runtime_error("Invalid environment format: "
+                                     + environment_format);
 
         environment_publisher_ = ros_node_->create_publisher<visualization_msgs::msg::MarkerArray>("environment_visualisation", 10);
     }
@@ -71,9 +75,11 @@ EnvironmentVisualiser::EnvironmentVisualiser(const SimulatorConfig &config,
     /** GAS SOURCE VISUALISATION **/
     for (size_t i = 0; i < config.gas_sources.size(); ++i)
     {
-        visualization_msgs::msg::Marker source = gaden::getAsMarker(config.gas_sources[i], i,
-                                                                    ros_node_->get_clock()->now(),
-                                                                    config.visualisation.fixed_frame);
+        visualization_msgs::msg::Marker source = gaden::getAsMarker(
+                    config.gas_sources[i], i,
+                    ros_node_->get_clock()->now(),
+                    config.visualisation.fixed_frame);
+
         marker_gas_sources_.markers.push_back(source);
     }
 
