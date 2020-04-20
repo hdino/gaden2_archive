@@ -16,6 +16,16 @@ OpenVdbEnvironmentModel::OpenVdbEnvironmentModel(OccupancyGrid::Ptr &grid, rl::L
     logger.info() << "Bounding box: " << bounding_box_.toString();
 }
 
+Eigen::Vector3d OpenVdbEnvironmentModel::getEnvironmentMin() const
+{
+    return bounding_box_.getMinInWorldCoordinates();
+}
+
+Eigen::Vector3d OpenVdbEnvironmentModel::getEnvironmentMax() const
+{
+    return bounding_box_.getMaxInWorldCoordinates();
+}
+
 bool OpenVdbEnvironmentModel::hasObstacleBetweenPoints(
         const Eigen::Vector3d &pa,
         const Eigen::Vector3d &pb) const

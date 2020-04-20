@@ -17,6 +17,9 @@ public:
     OpenVdbEnvironmentModel(OccupancyGrid::Ptr &grid,
                             rl::Logger &parent_logger);
 
+    Eigen::Vector3d getEnvironmentMin() const;
+    Eigen::Vector3d getEnvironmentMax() const;
+
     bool hasObstacleBetweenPoints(const Eigen::Vector3d &pa,
                                   const Eigen::Vector3d &pb) const;
 

@@ -66,6 +66,8 @@ SimulatorConfig loadSimulatorConfig(std::shared_ptr<rclcpp::Node> &ros_node)
 
     config.visualisation = loadVisualisationConfig(yaml_config["visualisation"]);
 
+    config.wind_model = yaml_config["wind"]["format"].as<std::string>();
+
     return config;
 }
 

@@ -4,6 +4,8 @@ DEPENDPATH += $$PWD
 SOURCES += \
     $$PWD/src/environment_model.cpp \
     $$PWD/src/environment_visualisation.cpp \
+    $$PWD/src/farrells_wind_model.cpp \
+    $$PWD/src/farrells_wind_model_noise.cpp \
     $$PWD/src/filament_model.cpp \
     $$PWD/src/filament_model_rviz.cpp \
     $$PWD/src/filament_simulator.cpp \
@@ -19,6 +21,8 @@ SOURCES += \
 HEADERS += \
     $$PWD/include/gaden_filament_simulator/environment_model.hpp \
     $$PWD/include/gaden_filament_simulator/environment_visualisation.hpp \
+    $$PWD/include/gaden_filament_simulator/farrells_wind_model.hpp \
+    $$PWD/include/gaden_filament_simulator/farrells_wind_model_noise.hpp \
     $$PWD/include/gaden_filament_simulator/filament.hpp \
     $$PWD/include/gaden_filament_simulator/filament_model.hpp \
     $$PWD/include/gaden_filament_simulator/filament_model_rviz.hpp \

@@ -5,6 +5,7 @@
 #include <gaden_common/occupancy_grid.h>
 //#include <gaden_filament_simulator/filament_simulator.h>
 #include <gaden_filament_simulator/environment_visualisation.hpp>
+#include <gaden_filament_simulator/farrells_wind_model.hpp>
 #include <gaden_filament_simulator/filament_model.hpp>
 #include <gaden_filament_simulator/filament_model_rviz.hpp>
 #include <gaden_filament_simulator/inline_wind_model.hpp>
@@ -49,7 +50,16 @@ int main(int argc, char **argv)
     auto gas_dispersion_model = std::make_shared<gaden::FilamentModel>(yaml_config, logger);
 
     // 6. Create the wind model
-    auto wind_model = std::make_shared<gaden::InlineWindModel>(yaml_config, logger);
+    std::shared_ptr<gaden::WindModel> wind_model;
+    if (config.wind_model == "inline")
+        wind_model = std::make_shared<gaden::InlineWindModel>(yaml_config, logger);
+    else if (config.wind_model == "farrell")
+        wind_model = std::make_shared<gaden::FarrellsWindModel>(yaml_config, env_model, logger);
+    else
+    {
+        logger.error() << "Unsupported wind model specified: " << config.wind_model;
+        return 0;
+    }
 
     // 7. Create the simulator
     auto simulator = gaden::Simulator::create(config,

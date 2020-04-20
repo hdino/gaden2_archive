@@ -29,6 +29,16 @@ openvdb::Coord Box::toCellCoord(const Eigen::Vector3d &p) const
     return grid_helper::getCellCoordinates(p, cell_size_);
 }
 
+Eigen::Vector3d Box::getMinInWorldCoordinates() const
+{
+    return world_min_;
+}
+
+Eigen::Vector3d Box::getMaxInWorldCoordinates() const
+{
+    return world_max_;
+}
+
 Eigen::Vector3d Box::getSizeInWorldCoordinates() const
 {
     return world_max_ - world_min_;

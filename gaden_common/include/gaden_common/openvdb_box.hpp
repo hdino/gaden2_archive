@@ -41,6 +41,8 @@ public:
         return cell_bbox_.isInside(cell);
     }
 
+    Eigen::Vector3d getMinInWorldCoordinates() const;
+    Eigen::Vector3d getMaxInWorldCoordinates() const;
     Eigen::Vector3d getSizeInWorldCoordinates() const;
     Eigen::Vector3d getCenterInWorldCoordinates() const;
 

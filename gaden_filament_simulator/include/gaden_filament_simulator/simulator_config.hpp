@@ -33,6 +33,8 @@ struct SimulatorConfig
     std::vector<GasSource> gas_sources;
 
     VisualisationConfig visualisation;
+
+    std::string wind_model;
 };
 std::string toString(const SimulatorConfig &config, size_t indention = 0);
 
