@@ -2,6 +2,7 @@
 // Insect Robotics Group, University of Edinburgh
 // Available at: https://github.com/InsectRobotics/pompy
 
+#include <gaden_common/interpolation.hpp>
 #include <gaden_filament_simulator/environment_model.hpp>
 #include <gaden_filament_simulator/farrells_wind_model.hpp>
 #include <gaden_filament_simulator/farrells_wind_model_noise.hpp>
@@ -53,47 +54,33 @@ FarrellsWindModel::FarrellsWindModel(const YAML::Node &yaml_config,
     logger.info() << "Environment size: x=" << environment_size[0] << " y=" << environment_size[1];
     logger.info() << "Grid target size: " << grid_target_size;
 
-    // TODO
+    // TODO Vectorise
     size_t n_x = std::ceil(environment_size[0] / grid_target_size) + 1; // number of grid points in x direction
     size_t n_y = std::ceil(environment_size[1] / grid_target_size) + 1; // number of grid points in y direction
 
     dx_ = environment_size[0] / (n_x - 1);
     dy_ = environment_size[1] / (n_y - 1);
-    dx_pow2_ = dx_ * dx_;
-    dy_pow2_ = dy_ * dy_;
-    delta_grid = Eigen::Vector3d(dx_, dy_, 1);
+    delta_grid = Eigen::Array3d(dx_, dy_, 1);
 
     logger.info() << "Using " << n_x << "x" << n_y << " grid points. --> dx=" << dx_ << " dy=" << dy_;
 
     // initialise wind velocity field to mean values
     // +2s are to account for boundary grid points
-    //logger.info("Initialising wind velocity field");
     u_ = Eigen::ArrayXXd::Ones(n_x + 2, n_y + 2) * config_.u0;
     v_ = Eigen::ArrayXXd::Ones(n_x + 2, n_y + 2) * config_.v0;
 
     // preassign array of corner means values
-    //logger.info("Initialising corner values");
     corner_means_.head<4>() = config_.u0;
     corner_means_.tail<4>() = config_.v0;
-    //corner_means_.block(0, 0, 1, 4) = config_.u0;
-    //corner_means_.block(0, 4, 1, 4) = config_.v0;
-    //logger.info() << "Corner means: " << corner_means_;
 
     // precompute linear ramp arrays with size of boundary edges for
     // linear interpolation of corner values
-    //logger.info("Initialising ramp arrays");
     ramp_x_ = Eigen::ArrayXd::LinSpaced(n_x + 2, 0.0, 1.0);
     ramp_y_ = Eigen::ArrayXd::LinSpaced(n_y + 2, 0.0, 1.0);
-    //ramp_x_ = Eigen::VectorXd::LinSpaced(n_x + 2, 0.0, 1.0);
-    //ramp_y_ = Eigen::VectorXd::LinSpaced(n_y + 2, 0.0, 1.0);
 
-    increment(0.1, 0); // TODO repeat until steady state
-
-    getWindVelocityAt(Eigen::Vector3d(-50, -25, 0));
-    getWindVelocityAt(Eigen::Vector3d(-1, -1, 0));
-    getWindVelocityAt(Eigen::Vector3d(0, 0, 0));
-    getWindVelocityAt(Eigen::Vector3d(5, 5, 0));
-    getWindVelocityAt(Eigen::Vector3d(50, 25, 0));
+    // update the model several times to reach steady state conditions
+    for (size_t i = 0; i < 1000; ++i)
+        increment(0.01, 0);
 }
 
 FarrellsWindModel::~FarrellsWindModel()
@@ -105,7 +92,6 @@ void FarrellsWindModel::increment(double time_step, double total_sim_time)
 
     // update boundary values
     applyBoundaryConditions(time_step);
-    //logger.info() << "u dim: " << u_.rows() << " " << u_.cols();
 
     // approximate spatial first derivatives with centred finite difference
     // equations for both components of wind field
@@ -124,8 +110,6 @@ void FarrellsWindModel::increment(double time_step, double total_sim_time)
     using namespace Eigen;
     auto u_inner = u_(seq(1, last-1), seq(1, last-1));
     auto v_inner = v_(seq(1, last-1), seq(1, last-1));
-
-    logger.info() << u_inner.rows() << ", " << u_inner.cols();
 
     auto du_dt = -u_inner * du_dx - v_inner * du_dy +
                  0.5 * config_.k_x * d2u_dx2 + 0.5 * config_.k_y * d2u_dy2;
@@ -164,39 +148,59 @@ void FarrellsWindModel::applyBoundaryConditions(double dt)
 
 std::tuple<Eigen::ArrayXXd, Eigen::ArrayXXd> FarrellsWindModel::getCentred1stDifferences(const Eigen::ArrayXXd &f)
 {
+    static double dx2_inv = 1.0 / (2 * dx_);
+    static double dy2_inv = 1.0 / (2 * dy_);
+
     using namespace Eigen;
-    return {(f(seq(2, last),   seq(1, last-1)) - f(seq(0, last-2), seq(1, last-1))) / (2 * dx_), // TODO Precompute 1/(2dx)
-            (f(seq(1, last-1), seq(2, last))   - f(seq(1, last-1), seq(0, last-2))) / (2 * dy_)};
+    return {(f(seq(2, last),   seq(1, last-1)) - f(seq(0, last-2), seq(1, last-1))) * dx2_inv,
+            (f(seq(1, last-1), seq(2, last))   - f(seq(1, last-1), seq(0, last-2))) * dy2_inv};
 }
 
 std::tuple<Eigen::ArrayXXd, Eigen::ArrayXXd> FarrellsWindModel::getCentred2ndDifferences(const Eigen::ArrayXXd &f)
 {
+    static double dx_pow2_inv = 1.0 / (dx_ * dx_);
+    static double dy_pow2_inv = 1.0 / (dy_ * dy_);
+
     using namespace Eigen;
-    return {(f(seq(2, last),   seq(1, last-1)) - 2 * f(seq(1, last-1), seq(1, last-1)) + f(seq(0, last-2), seq(1, last-1))) / dx_pow2_, // TODO Precompute
-            (f(seq(1, last-1), seq(2, last))   - 2 * f(seq(1, last-1), seq(1, last-1)) + f(seq(1, last-1), seq(0, last-2))) / dy_pow2_};
+    return {(f(seq(2, last),   seq(1, last-1)) - 2 * f(seq(1, last-1), seq(1, last-1)) + f(seq(0, last-2), seq(1, last-1))) * dx_pow2_inv,
+            (f(seq(1, last-1), seq(2, last))   - 2 * f(seq(1, last-1), seq(1, last-1)) + f(seq(1, last-1), seq(0, last-2))) * dy_pow2_inv};
 }
 
 Eigen::Vector3d FarrellsWindModel::getWindVelocityAt(const Eigen::Vector3d &position)
 {
+    // Create a view to the inner part and the 'last' edge.
+    // The 'last' edge is only needed for the special case
+    // that 'position' lies on the boundary,
+    // to avoid an additional if clause.
     using namespace Eigen;
-    auto u_inner = u_(seq(1, last-1), seq(1, last-1));
-    auto v_inner = v_(seq(1, last-1), seq(1, last-1));
+    auto u_inner = u_(seq(1, last), seq(1, last));
+    auto v_inner = v_(seq(1, last), seq(1, last));
 
-    Eigen::Array3d cell_float_position = (position - environment_min_).array() / delta_grid.array();
+    Eigen::Array3d cell_float_position = (position - environment_min_).array() / delta_grid;
     Eigen::Array3d cell_lower_index_float = cell_float_position.floor();
-    Eigen::Array3d cell_position_offset = cell_float_position - cell_lower_index_float;
-    logger.info() << "Offset\n" << cell_position_offset;
 
     Eigen::Array3i cell_lower_index = cell_lower_index_float.cast<int>();
     Eigen::Array3i cell_upper_index = cell_lower_index + 1;
 
-    double u = (1 - cell_position_offset[0]) * u_(cell_lower_index[0], cell_lower_index[1])
-                  + cell_position_offset[0]  * u_(cell_upper_index[0], cell_upper_index[1]);
+    Eigen::Vector2d p = cell_float_position.head<2>();
+    Eigen::Vector2d P11(cell_lower_index_float[0],
+                        cell_lower_index_float[1]);
+    Eigen::Vector2d P22(cell_upper_index[0],
+                        cell_upper_index[1]);
 
-    double v = (1 - cell_position_offset[1]) * v_(cell_lower_index[0], cell_lower_index[1])
-                  + cell_position_offset[1]  * v_(cell_upper_index[0], cell_upper_index[1]);
+    double u11 = u_inner(cell_lower_index[0], cell_lower_index[1]);
+    double u12 = u_inner(cell_lower_index[0], cell_upper_index[1]);
+    double u21 = u_inner(cell_upper_index[0], cell_lower_index[1]);
+    double u22 = u_inner(cell_upper_index[0], cell_upper_index[1]);
+    double u_p = interpolateBilinear(p, P11, P22, u11, u12, u21, u22);
 
-    return Eigen::Vector3d(1,0,0);
+    double v11 = v_inner(cell_lower_index[0], cell_lower_index[1]);
+    double v12 = v_inner(cell_lower_index[0], cell_upper_index[1]);
+    double v21 = v_inner(cell_upper_index[0], cell_lower_index[1]);
+    double v22 = v_inner(cell_upper_index[0], cell_upper_index[1]);
+    double v_p = interpolateBilinear(p, P11, P22, v11, v12, v21, v22);
+
+    return Eigen::Vector3d(u_p, v_p, 0);
 }
 
 } // namespace gaden

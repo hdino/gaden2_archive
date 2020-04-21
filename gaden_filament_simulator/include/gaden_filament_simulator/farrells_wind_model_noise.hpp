@@ -18,7 +18,6 @@ public:
 
     void update(double dt);
 
-    //Eigen::Array<double, 1, Eigen::Dynamic> getNoise() const;
     Eigen::ArrayXd getNoise() const;
 
 private:

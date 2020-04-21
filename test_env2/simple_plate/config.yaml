@@ -19,12 +19,12 @@ wind:
   format: farrell # supports: inline, farrell
                   # missing support: OpenFOAM
   farrell_wind:
-    grid_target_size: 10.0          # [m] recommended range: [5, 10]
+    grid_target_size: 5.0           # [m] recommended range: [5, 10]
     u0: 1.0                         # [m/s] mean wind velocity in x-direction
     v0: 0.0                         # [m/s] mean wind velocity in y-direction
     k_x: 10.0                       # [m2/s] diffusivity term in x-direction, recommended range: [1, 30]
     k_y: 10.0                       # [m2/s] diffusivity term in y-direction, recommended range: [1, 30]
-    noise_gain: 20.0                # [] Input gain constant for boundary condition noise generation.
+    noise_gain: 2.0                 # [] Input gain constant for boundary condition noise generation.
     noise_damp: 0.1                 # [] Damping ratio for boundary condition noise generation.
     noise_bandwidth: 0.2            # [] Bandwidth for boundary condition noise generation.
   inline_wind:

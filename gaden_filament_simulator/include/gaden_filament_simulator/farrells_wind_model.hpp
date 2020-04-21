@@ -53,14 +53,11 @@ private:
     Eigen::Vector3d environment_min_;
 
     double dx_, dy_; // grid point spacing in x/y direction
-    double dx_pow2_, dy_pow2_;
-    Eigen::Vector3d delta_grid; // (dx, dy, dz), dz has no meaning
+    Eigen::Array3d delta_grid; // (dx, dy, dz), dz has no meaning
 
     Eigen::ArrayXXd u_, v_; // wind velocity field in x/y direction
 
-    //Eigen::Array<double, 1, 8> corner_means_;
     Eigen::Array<double, 8, 1> corner_means_;
-    //Eigen::Array<double, 1, Eigen::Dynamic> ramp_x_, ramp_y_;
     Eigen::ArrayXd ramp_x_, ramp_y_;
 };
 

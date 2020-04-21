@@ -38,7 +38,6 @@ void FarrellColouredNoiseGenerator::update(double dt)
     }
 }
 
-//Eigen::Array<double, 1, Eigen::Dynamic> FarrellColouredNoiseGenerator::getNoise() const
 Eigen::ArrayXd FarrellColouredNoiseGenerator::getNoise() const
 {
     return state.row(0);
