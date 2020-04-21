@@ -24,6 +24,7 @@ add_library(gaden_common
   src/gas_source.cpp
   src/grid_to_marker.cpp
   src/inline_environment.cpp
+  src/interpolation.cpp
   src/occupancy_grid.cpp
   src/openvdb_box.cpp
   src/openvdb_helper.cpp

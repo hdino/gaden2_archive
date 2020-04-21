@@ -10,6 +10,7 @@ SOURCES += \
     $$PWD/src/gas_source.cpp \
     $$PWD/src/grid_to_marker.cpp \
     $$PWD/src/inline_environment.cpp \
+    $$PWD/src/interpolation.cpp \
     $$PWD/src/occupancy_grid.cpp \
     $$PWD/src/openvdb_box.cpp \
     $$PWD/src/openvdb_helper.cpp \
@@ -28,6 +29,7 @@ HEADERS += \
     $$PWD/include/gaden_common/grid_helper.hpp \
     $$PWD/include/gaden_common/grid_to_marker.hpp \
     $$PWD/include/gaden_common/inline_environment.hpp \
+    $$PWD/include/gaden_common/interpolation.hpp \
     $$PWD/include/gaden_common/math_helper.h \
     $$PWD/include/gaden_common/multidim_vector.h \
     $$PWD/include/gaden_common/occupancy.hpp \
