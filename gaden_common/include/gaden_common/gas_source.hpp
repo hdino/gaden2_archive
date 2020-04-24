@@ -15,16 +15,24 @@ class Node;
 
 namespace gaden {
 
-struct GasSource
+struct GasSourceVisualisation
 {
-    //geometry_msgs::msg::Point position;
-    Eigen::Vector3d position;
-
-    unsigned num_filaments_per_second; // number of filaments released per second
-
-    // visualisation
     std_msgs::msg::ColorRGBA color;
     double scale;
+};
+std::string toString(const GasSourceVisualisation &gas_source, size_t indention = 0);
+
+struct GasSource
+{
+    Eigen::Vector3d position;
+
+    double release_rate; // [kg/h]
+    //bool variable_release_rate;
+        // If false, the release rate of the gas source will be used;
+        // if true, a poisson process is used with the release rate of the
+        // gas source as the distribution's lambda parameter
+
+    GasSourceVisualisation visualisation;
 };
 std::string toString(const GasSource &gas_source, size_t indention = 0);
 

@@ -22,6 +22,7 @@ add_executable(filament_simulator
   src/simulator.cpp
   src/simulator_config.cpp
   src/wind_model.cpp
+  src/sensor/insitu.cpp
 )
 
 target_include_directories(filament_simulator PUBLIC

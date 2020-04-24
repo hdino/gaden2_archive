@@ -34,10 +34,12 @@ wind:
     time_between_updates: 5.0       # [s]
 
 gas_sources:
-  - position: [-45, 0, 1]
-    num_filaments_per_second: 10
-    scale: 0.2
-    color: [0.0, 1.0, 0.0]
+  - position: [-45, 0, 1]           # [m]
+    release_rate: 100.0              # [kg/h]
+    #variable_release_rate: False
+    visualisation:
+      scale: 0.2
+      color: [0.0, 1.0, 0.0]
 
 filament_model:
   cell_size: 0.05 # [m]

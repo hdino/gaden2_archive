@@ -17,6 +17,7 @@ GasDispersionModel::~GasDispersionModel()
 void GasDispersionModel::setSimulator(std::shared_ptr<Simulator> simulator)
 {
     this->simulator = simulator;
+    processSimulatorSet();
 }
 
 } // namespace gaden

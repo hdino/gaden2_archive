@@ -3,7 +3,6 @@
 #include <yaml-cpp/yaml.h>
 
 #include <gaden_common/occupancy_grid.h>
-//#include <gaden_filament_simulator/filament_simulator.h>
 #include <gaden_filament_simulator/environment_visualisation.hpp>
 #include <gaden_filament_simulator/farrells_wind_model.hpp>
 #include <gaden_filament_simulator/filament_model.hpp>
@@ -13,6 +12,7 @@
 #include <gaden_filament_simulator/openvdb_environment_model.hpp>
 #include <gaden_filament_simulator/simulator.hpp>
 #include <gaden_filament_simulator/simulator_config.hpp>
+#include <gaden_filament_simulator/sensor/insitu.hpp>
 
 int main(int argc, char **argv)
 {
@@ -70,12 +70,18 @@ int main(int argc, char **argv)
 
     auto filament_visualisation = std::make_shared<gaden::FilamentModelRvizVisualisation>(
                 ros_node, gas_dispersion_model, config.visualisation.fixed_frame,
-                0.5, logger);
+                0.25, logger);
 
+    gaden::sensor::InSitu insitu_sensor(gas_dispersion_model,
+                                        ros_node,
+                                        Eigen::Vector3d(0, 0, 20),
+                                        config.visualisation.fixed_frame);
+
+    rclcpp::executors::SingleThreadedExecutor ros_executor;
     while (rclcpp::ok() && simulator->simulate())
     {
         filament_visualisation->publish();
-        if (rclcpp::ok()) // workaround, see https://github.com/ros2/rclcpp/issues/1066
-            rclcpp::spin_some(ros_node);
+        insitu_sensor.doEvents();
+        ros_executor.spin_node_some(ros_node);
     }
 }

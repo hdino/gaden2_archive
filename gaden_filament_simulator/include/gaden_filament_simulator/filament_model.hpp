@@ -4,8 +4,11 @@
 #include <list>
 #include <memory>
 #include <random>
+#include <vector>
 
 #include <openvdb/openvdb.h>
+
+#include <gaden_common/gas_source.hpp>
 
 #include "filament.hpp"
 #include "gas_dispersion_model.hpp"
@@ -17,10 +20,21 @@ class Node;
 
 namespace gaden {
 
+namespace chemicals {
+class ChemicalBase;
+}
+
 template <typename TGrid>
 class CacheGrid;
 
 class EnvironmentModel;
+
+class FilamentGasSource : public GasSource
+{
+public:
+    unsigned num_filaments_per_second; // [1/s]
+    double mol_per_filament; // [mol]
+};
 
 class FilamentModel : public GasDispersionModel
 {
@@ -32,23 +46,17 @@ public:
 
     const std::list<Filament> & getFilaments() const;
 
-    double getConcentrationAt(const Eigen::Vector3d &position);
+    double getConcentrationAt(const Eigen::Vector3d &position); // returns [ppm]
 
 private:
+    void processSimulatorSet();
+
     void addNewFilaments(double time_step, double total_sim_time);
-
-    //void updateGasConcentrationFromFilaments();
-    //void updateGasConcentration(Filament &filament);
-
     void updateFilamentPositions(double time_step, double total_sim_time);
 
     enum class UpdatePositionResult { Okay, FilamentVanished };
     UpdatePositionResult testAndSetPosition(Eigen::Vector3d &position, const Eigen::Vector3d &candidate);
     UpdatePositionResult updateFilamentPosition(Filament &filament, double time_step, double total_sim_time);
-
-    double computeConcentrationAt(const Eigen::Vector3d &position);
-
-    std::unique_ptr<CacheGrid<openvdb::DoubleGrid>> concentration_cache_;
 
     // random
     //std::mt19937 random_engine_;
@@ -56,23 +64,15 @@ private:
     std::normal_distribution<double> filament_spawn_distribution_;
     std::normal_distribution<double> filament_stochastic_movement_distribution_;
 
-    //double cell_size_; // [m] cell_size of the gas distribution
-    double cell_num_moles_;
-    double filament_num_moles_of_gas_;
-
     // configuration parameters
-    double filament_initial_std_;
-    double filament_initial_std_pow2_;
-    double filament_spawn_radius_;
-    bool variable_filament_rate_; // if true, the number of released filaments will be random (0, num_filaments_per_second_)
+    double filament_initial_radius_;    // [m]
+    double filament_growth_gamma_;      // [m2/s]
+    double gas_density_factor_;         // [kg/m3]
 
-    double filament_growth_gamma_;
-    double filament_center_concentration_;
+    std::unique_ptr<chemicals::ChemicalBase> gas_;
+    std::vector<FilamentGasSource> gas_sources_;
 
-    //double gas_gravity_;
-    double relative_gas_density_;
-
-    std::list<Filament> filaments_; // use a list because forward_list does not have the 'erase' operation
+    std::list<Filament> filaments_;
 
     // shared_ptrs to other components
     std::shared_ptr<EnvironmentModel> env_model_;

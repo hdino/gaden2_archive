@@ -14,6 +14,7 @@ SOURCES += \
     $$PWD/src/main.cpp \
     $$PWD/src/occupancy.cpp \
     $$PWD/src/openvdb_environment_model.cpp \
+    $$PWD/src/sensor/insitu.cpp \
     $$PWD/src/simulator.cpp \
     $$PWD/src/simulator_config.cpp \
     $$PWD/src/wind_model.cpp
@@ -32,6 +33,7 @@ HEADERS += \
     $$PWD/include/gaden_filament_simulator/occupancy.hpp \
     $$PWD/include/gaden_filament_simulator/openvdb_environment_model.hpp \
     $$PWD/include/gaden_filament_simulator/physical_constants.hpp \
+    $$PWD/include/gaden_filament_simulator/sensor/insitu.hpp \
     $$PWD/include/gaden_filament_simulator/simulator.hpp \
     $$PWD/include/gaden_filament_simulator/simulator_config.hpp \
     $$PWD/include/gaden_filament_simulator/wind_model.hpp

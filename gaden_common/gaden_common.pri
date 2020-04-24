@@ -21,6 +21,7 @@ SOURCES += \
 HEADERS += \
     $$PWD/include/gaden_common/cache_grid.hpp \
     $$PWD/include/gaden_common/cad_model.h \
+    $$PWD/include/gaden_common/chemical_substance.hpp \
     $$PWD/include/gaden_common/eigen_helper.hpp \
     $$PWD/include/gaden_common/file_read_helper.h \
     $$PWD/include/gaden_common/filesystem.h \

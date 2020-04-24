@@ -88,7 +88,7 @@ bool Simulator::simulate()
     //sim_time_ += time_step_;
     ++current_sim_step_;
 
-    std::this_thread::sleep_for(std::chrono::milliseconds(unsigned(time_step_ * 500)));
+    std::this_thread::sleep_for(std::chrono::milliseconds(unsigned(time_step_ * 250)));
 
     return true;
 }
