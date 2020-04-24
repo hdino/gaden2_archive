@@ -13,7 +13,6 @@ add_executable(filament_simulator
   src/farrells_wind_model_noise.cpp
   src/filament_model.cpp
   src/filament_model_rviz.cpp
-  src/filament_simulator.cpp
   src/gas_dispersion_model.cpp
   src/inline_wind_model.cpp
   src/main.cpp

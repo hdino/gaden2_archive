@@ -8,7 +8,6 @@ SOURCES += \
     $$PWD/src/farrells_wind_model_noise.cpp \
     $$PWD/src/filament_model.cpp \
     $$PWD/src/filament_model_rviz.cpp \
-    $$PWD/src/filament_simulator.cpp \
     $$PWD/src/gas_dispersion_model.cpp \
     $$PWD/src/inline_wind_model.cpp \
     $$PWD/src/main.cpp \
@@ -27,7 +26,6 @@ HEADERS += \
     $$PWD/include/gaden_filament_simulator/filament.hpp \
     $$PWD/include/gaden_filament_simulator/filament_model.hpp \
     $$PWD/include/gaden_filament_simulator/filament_model_rviz.hpp \
-    $$PWD/include/gaden_filament_simulator/filament_simulator.h \
     $$PWD/include/gaden_filament_simulator/gas_dispersion_model.hpp \
     $$PWD/include/gaden_filament_simulator/inline_wind_model.hpp \
     $$PWD/include/gaden_filament_simulator/occupancy.hpp \

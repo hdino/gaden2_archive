@@ -51,6 +51,8 @@ public:
 private:
     void processSimulatorSet();
 
+    double getMolarFraction(double gas_molar_concentration) const;
+
     void addNewFilaments(double time_step, double total_sim_time);
     void updateFilamentPositions(double time_step, double total_sim_time);
 
@@ -67,7 +69,8 @@ private:
     // configuration parameters
     double filament_initial_radius_;    // [m]
     double filament_growth_gamma_;      // [m2/s]
-    double gas_density_factor_;         // [kg/m3]
+    //double gas_density_factor_;         // [kg/m3]
+    double gas_density_delta_;          // [kg/m3]
 
     std::unique_ptr<chemicals::ChemicalBase> gas_;
     std::vector<FilamentGasSource> gas_sources_;
