@@ -23,6 +23,11 @@ public:
     bool hasObstacleBetweenPoints(const Eigen::Vector3d &pa,
                                   const Eigen::Vector3d &pb) const;
 
+    CollisionTestResult getCollisionDistance(
+            const Eigen::Vector3d &start_point,
+            const Eigen::Vector3d &direction,
+            double max_distance) const;
+
     Occupancy getOccupancy(const Eigen::Vector3d &p) const;
 
     Occupancy getOccupancy(const openvdb::Coord &coord) const;

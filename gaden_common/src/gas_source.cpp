@@ -36,7 +36,7 @@ GasSource loadGasSourceFrom(const YAML::Node &yaml_node)
 
     YAML::Node yaml_visualisation = yaml_node["visualisation"];
     gas_source.visualisation.scale = yaml_visualisation["scale"].as<double>();
-    gas_source.visualisation.color = ros_type::getColorFromYaml(yaml_visualisation);
+    gas_source.visualisation.color = ros_type::getColorFrom(yaml_visualisation["color"]);
     return gas_source;
 }
 

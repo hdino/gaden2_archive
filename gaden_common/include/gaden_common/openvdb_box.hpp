@@ -46,6 +46,9 @@ public:
     Eigen::Vector3d getSizeInWorldCoordinates() const;
     Eigen::Vector3d getCenterInWorldCoordinates() const;
 
+    openvdb::Coord getMinInCellCoordinates() const;
+    openvdb::Coord getMaxInCellCoordinates() const;
+
     template <typename TGridPtr>
     void addToGrid(TGridPtr &grid);
 
@@ -101,29 +104,6 @@ void Box::addToGrid(TGridPtr &grid)
             for (xyz.x() = cell_bbox_.min().x(); xyz.x() < cell_bbox_.max().x(); ++xyz.x())
                 grid_accessor.setValue(xyz, 1);
 }
-
-//void addBoxToGrid(const Box &box, OccupancyGrid::Ptr &grid)
-//{
-//    double cell_size = grid->metaValue<double>("cell_size");
-
-//    openvdb::Vec3i box_origin = box.origin / cell_size;
-//    openvdb::Vec3i box_size = box.size / cell_size;
-//    openvdb::Vec3i box_end = box_origin + box_size;
-
-//    //std::cout << "Origin: " << toString(box_origin) << std::endl;
-//    //std::cout << "Size: " << toString(box_size) << std::endl;
-//    //std::cout << "End: " << toString(box_end) << std::endl;
-
-//    auto grid_accessor = grid->getAccessor();
-
-//    openvdb::Coord xyz;
-//    for (xyz.z() = box_origin.z(); xyz.z() < box_end.z(); ++xyz.z())
-//        for (xyz.y() = box_origin.y(); xyz.y() < box_end.y(); ++xyz.y())
-//            for (xyz.x() = box_origin.x(); xyz.x() < box_end.x(); ++xyz.x())
-//                grid_accessor.setValue(xyz, 1);
-//}
-
-
 
 } // namespace gaden::open_vdb
 

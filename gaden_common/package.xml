@@ -10,6 +10,7 @@
   <buildtool_depend>ament_cmake</buildtool_depend>
   
   <depend>gaden_eigen</depend>
+  <depend>octree</depend>
   <depend>OpenVDB</depend>
   <depend>rclcpp</depend>
   <depend>rl_logging</depend>

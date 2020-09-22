@@ -11,6 +11,7 @@
 #include <gaden_common/gas_source.hpp>
 
 #include "filament.hpp"
+#include "filament_grid.hpp"
 #include "gas_dispersion_model.hpp"
 #include "wind_model.hpp"
 
@@ -39,7 +40,9 @@ public:
 class FilamentModel : public GasDispersionModel
 {
 public:
-    FilamentModel(const YAML::Node &config, rl::Logger &parent_logger);
+    FilamentModel(const YAML::Node &config,
+                  std::shared_ptr<EnvironmentModel> environment_model,
+                  rl::Logger &parent_logger);
     ~FilamentModel();
 
     void increment(double time_step, double total_sim_time);
@@ -66,6 +69,8 @@ private:
     std::normal_distribution<double> filament_spawn_distribution_;
     std::normal_distribution<double> filament_stochastic_movement_distribution_;
 
+    std::shared_ptr<EnvironmentModel> env_model_;
+
     // configuration parameters
     double filament_initial_radius_;    // [m]
     double filament_growth_gamma_;      // [m2/s]
@@ -76,9 +81,9 @@ private:
     std::vector<FilamentGasSource> gas_sources_;
 
     std::list<Filament> filaments_;
+    FilamentGrid filament_grid_;
 
     // shared_ptrs to other components
-    std::shared_ptr<EnvironmentModel> env_model_;
     std::shared_ptr<WindModel> wind_model_;
 };
 

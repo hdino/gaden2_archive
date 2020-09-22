@@ -8,6 +8,16 @@
 
 namespace gaden {
 
+struct CollisionTestResult
+{
+    CollisionTestResult(Occupancy collision_type, double distance)
+        : collision_type(collision_type), distance(distance)
+    {}
+
+    Occupancy collision_type;
+    double distance;
+};
+
 class EnvironmentModel
 {
 public:
@@ -19,6 +29,11 @@ public:
 
     virtual bool hasObstacleBetweenPoints(const Eigen::Vector3d &pa,
                                           const Eigen::Vector3d &pb) const = 0;
+
+    virtual CollisionTestResult getCollisionDistance(
+            const Eigen::Vector3d &start_point,
+            const Eigen::Vector3d &direction,
+            double max_distance) const = 0;
 
     virtual Occupancy getOccupancy(const Eigen::Vector3d &p) const = 0;
 

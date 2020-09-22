@@ -44,7 +44,7 @@ Simulator::Simulator(SimulatorConfig &config,
 {
     // load configuration parameters
     time_step_ = 0.2;
-    double end_time = 120.0;
+    double end_time = 500.0;
 
     // initialise internal state
     current_sim_step_ = 0;
@@ -71,13 +71,18 @@ bool Simulator::simulate()
     if (current_sim_step_ > total_sim_steps_)
         return false;
 
+    std::shared_ptr<WindModel> wind_model = wind_model_.lock();
+    std::shared_ptr<GasDispersionModel> gas_model = gas_model_.lock();
+
     double sim_time = current_sim_step_ * time_step_;
 
     if (current_sim_step_ % 10 == 0)
+    {
         logger_.info() << "Simulating... sim_time = " << sim_time;
+    }
 
-    wind_model_.lock()->increment(time_step_, sim_time);
-    gas_model_.lock()->increment(time_step_, sim_time);
+    wind_model->increment(time_step_, sim_time);
+    gas_model->increment(time_step_, sim_time);
 
     //    if ( (sim.save_results==1) && (sim.sim_time>=sim.results_min_time) )
     //    {

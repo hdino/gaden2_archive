@@ -15,9 +15,14 @@
 
 namespace gaden {
 
-FilamentModel::FilamentModel(const YAML::Node &config, rl::Logger &parent_logger)
+FilamentModel::FilamentModel(
+        const YAML::Node &config,
+        std::shared_ptr<EnvironmentModel> environment_model,
+        rl::Logger &parent_logger)
     : GasDispersionModel(parent_logger)
     , random_engine_(std::random_device()())
+    , env_model_(environment_model)
+    , filament_grid_(1.0, env_model_)
 {
     // load configuration parameters
     YAML::Node model_config = config["filament_model"];
@@ -49,7 +54,6 @@ FilamentModel::FilamentModel(const YAML::Node &config, rl::Logger &parent_logger
 
 void FilamentModel::processSimulatorSet()
 {
-    env_model_ = simulator->getEnvironmentModel();
     wind_model_ = simulator->getWindModel();
 
     // Compute filament release rate of each gas source
@@ -107,10 +111,21 @@ double FilamentModel::getConcentrationAt(const Eigen::Vector3d &position)
 {
     double concentration = 0; // [mol/m3]
 
+//    const std::vector<FilamentInfluence> &neighbour_filaments =
+//            filament_grid_.getFilamentsAt(position);
+
+//    for (const FilamentInfluence &item : neighbour_filaments)
+//    {
+//        if (item.need_to_check_for_obstacle &&
+//                env_model_->hasObstacleBetweenPoints(position, item.filament->position))
+//            continue;
+//        concentration += item.filament->getConcentrationAt(position);
+//    }
+
     for (const Filament &filament : filaments_)
     {
-        if (env_model_->hasObstacleBetweenPoints(position, filament.position))
-            continue;
+//        if (env_model_->hasObstacleBetweenPoints(position, filament.position))
+//            continue;
         concentration += filament.getConcentrationAt(position);
     }
 
@@ -122,6 +137,17 @@ void FilamentModel::increment(double time_step, double total_sim_time)
 {
     addNewFilaments(time_step, total_sim_time);
     updateFilamentPositions(time_step, total_sim_time);
+
+//    filament_grid_.clear();
+//    for (Filament &filament : filaments_)
+//        filament_grid_.add(&filament);
+
+//    static double max_r2 = 0;
+//    for (const Filament &filament : filaments_)
+//        if (filament.getSquaredRadius() > max_r2)
+//            max_r2 = filament.getSquaredRadius();
+
+//    logger.info() << "#filaments: " << filaments_.size() << " max_r2=" << max_r2;
 }
 
 void FilamentModel::addNewFilaments(double time_step, double total_sim_time)
@@ -178,6 +204,7 @@ FilamentModel::testAndSetPosition(Eigen::Vector3d &position,
         position = candidate;
         return UpdatePositionResult::Okay;
     case Occupancy::Outlet:
+    case Occupancy::OutOfWorld:
         // The location corresponds to an outlet! Delete filament!
         //logger.info() << "Filament reached outlet at " << toString(candidate);
         return UpdatePositionResult::FilamentVanished;
@@ -220,9 +247,14 @@ FilamentModel::updateFilamentPosition(Filament &filament, double time_step, doub
             constant::g /                       // [m/s2] /
             chemicals::Air::DynamicViscosity(); // [kg/(m*s)] = [m2/(kg*s)]
 
-    double radius_squared = filament.getSquaredRadius() * 0.75e-2; // [m2]
+    //double radius_squared = filament.getSquaredRadius() * 0.75e-2; // [m2]
+    double radius_squared = filament.getSquaredRadius() * 0.05; // [m2]
         // TODO: magic factor (0.75e-2), there was one in the original GADEN as well
-    double gas_fraction = getMolarFraction(filament.getConcentrationAtCentre()); // []
+    //double gas_fraction = getMolarFraction(filament.getConcentrationAtCentre()); // []
+    double radius = 3.0 * std::sqrt(filament.getSquaredRadius());
+    double radius_pow3 = radius*radius*radius;
+    double average_concentration = filament.gas_amount / (4/3 * M_PI * radius_pow3);
+    double gas_fraction = getMolarFraction(average_concentration);
 
     double terminal_buoyancy_velocity_z =
             bouyancy_factor *       // [m2/(kg*s)] *

@@ -16,6 +16,7 @@ public:
              double initial_radius,
              double gas_amount_mol)
         : position(initial_position)
+        , gas_amount(gas_amount_mol)
         , radius_pow2_(initial_radius * initial_radius)
         , concentration_factor_(gas_amount_mol * SQRT_8_PI_POW3_INV)
     {
@@ -23,6 +24,9 @@ public:
     }
 
     inline double getSquaredRadius() const { return radius_pow2_; }
+
+    //inline double get3SigmaRadius() const { return radius_x_3_; }
+    inline double getSquared3SigmaRadius() const { return radius_pow2_x_9_; }
 
     inline void addToSquaredRadius(double delta_radius_pow2)
     {
@@ -38,26 +42,39 @@ public:
         return buffered_concentration_factor_ * std::exp(-distance_pow2 * radius_pow2_inv_);
     }
 
+    inline double getConcentrationUncheckedAt(const Eigen::Vector3d &x) const // returns [mol/m3]
+    {
+        // Same as getConcentrationAt, but without checking the 3 sigma range.
+        double distance_pow2 = (x - position).squaredNorm();
+        return buffered_concentration_factor_ * std::exp(-distance_pow2 * radius_pow2_inv_);
+    }
+
     inline double getConcentrationAtCentre() const // returns [mol/m3]
     {
         return buffered_concentration_factor_;
     }
 
     Eigen::Vector3d position; // [m] center of the filament
+    double gas_amount; // [mol]
 
 private:
     inline void updateRadius()
     {
+        //radius_ = std::sqrt(radius_pow2_);
+        //radius_x_3_ = 3.0 * radius_;
         radius_pow2_x_9_ = 9.0 * radius_pow2_;
         radius_pow2_inv_ = 1.0 / radius_pow2_;
+        //double radius_inverse = 1.0 / radius_;
         double radius_inverse = std::sqrt(radius_pow2_inv_);
         double radius_pow3_inv = radius_pow2_inv_ * radius_inverse;
         buffered_concentration_factor_ = concentration_factor_ * radius_pow3_inv;
     }
 
+    //double radius_; // [m]
     double radius_pow2_; // [m2] Controls the size of the filament,
                          // R^2(t) in Farrell's paper (sigma of a 3D gaussian)
-    double radius_pow2_x_9_; // 9*R^2
+    //double radius_x_3_; // 3*R
+    double radius_pow2_x_9_; // (3*R)^2 = 9*R^2
     double radius_pow2_inv_; // 1/R^2
     double concentration_factor_; // [mol] Q / sqrt(8 * pi^3), with Q being
                                   // the amount of gas in the filament

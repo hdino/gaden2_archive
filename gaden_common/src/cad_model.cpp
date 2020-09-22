@@ -30,7 +30,7 @@ CadModelColor getCadModelColorFromYaml(const YAML::Node &node, const std::string
 {
     CadModelColor result;
     static_cast<CadModel &>(result) = getCadModelFromYaml(node, base_path);
-    result.color = ros_type::getColorFromYaml(node);
+    result.color = ros_type::getColorFrom(node["color"]);
     return result;
 }
 

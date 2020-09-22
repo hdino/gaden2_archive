@@ -7,6 +7,7 @@ include(gaden_common-extras.cmake)
 # find dependencies
 #find_package(Eigen3 REQUIRED)
 find_package(gaden_eigen REQUIRED)
+find_package(octree REQUIRED)
 find_package(OpenVDB 7.1 REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(rl_logging REQUIRED)
@@ -23,8 +24,8 @@ add_library(gaden_common
   src/gaden1_occupancy_grid_importer.cpp
   src/gas_source.cpp
   src/grid_to_marker.cpp
-  src/inline_environment.cpp
   src/interpolation.cpp
+  src/occupancy.cpp
   src/occupancy_grid.cpp
   src/openvdb_box.cpp
   src/openvdb_helper.cpp
@@ -38,6 +39,7 @@ target_include_directories(gaden_common PUBLIC
 )
 
 target_link_libraries(gaden_common
+  octree
   OpenVDB::openvdb
   rl_logging
   yaml-cpp
@@ -45,6 +47,7 @@ target_link_libraries(gaden_common
 
 ament_target_dependencies(gaden_common
   gaden_eigen
+  octree
   OpenVDB
   rclcpp
   rl_logging
@@ -54,6 +57,7 @@ ament_target_dependencies(gaden_common
 
 ament_export_dependencies(
   gaden_eigen
+  octree
   OpenVDB
   rl_logging
   visualization_msgs

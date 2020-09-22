@@ -10,6 +10,7 @@ PKGCONFIG += eigen3
 
 INCLUDEPATH += \
     /opt/ros/eloquent/include \
+    $$PWD/../install/octree/include \
     $$PWD/../install/OpenVDB/include \
     $$PWD/../install/rl_logging/include
 

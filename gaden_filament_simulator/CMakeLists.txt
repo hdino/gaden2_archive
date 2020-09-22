@@ -5,12 +5,14 @@ include(${CMAKE_CURRENT_SOURCE_DIR}/../common_config.cmake)
 
 # find dependencies
 find_package(gaden_common REQUIRED)
+find_package(olfaction_msgs REQUIRED)
 
 add_executable(filament_simulator
   src/environment_model.cpp
   src/environment_visualisation.cpp
   src/farrells_wind_model.cpp
   src/farrells_wind_model_noise.cpp
+  src/filament_grid.cpp
   src/filament_model.cpp
   src/filament_model_rviz.cpp
   src/gas_dispersion_model.cpp
@@ -22,6 +24,8 @@ add_executable(filament_simulator
   src/simulator_config.cpp
   src/wind_model.cpp
   src/sensor/insitu.cpp
+  src/sensor/open_path.cpp
+  src/sensor/sensor_base.cpp
 )
 
 target_include_directories(filament_simulator PUBLIC
@@ -35,6 +39,7 @@ target_link_libraries(filament_simulator
 
 ament_target_dependencies(filament_simulator
   gaden_common
+  olfaction_msgs
 )
 
 install(TARGETS filament_simulator

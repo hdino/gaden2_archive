@@ -49,6 +49,16 @@ Eigen::Vector3d Box::getCenterInWorldCoordinates() const
     return 0.5 * (world_min_ + world_max_);
 }
 
+openvdb::Coord Box::getMinInCellCoordinates() const
+{
+    return cell_bbox_.min();
+}
+
+openvdb::Coord Box::getMaxInCellCoordinates() const
+{
+    return cell_bbox_.max();
+}
+
 std::string Box::toString(size_t indention) const
 {
     return  "min = " + gaden::toString(world_min_, indention) +
@@ -92,7 +102,7 @@ void BoundingBox::addMetadataToGrid(openvdb::GridBase::Ptr grid) const
 ColoredBox::ColoredBox(const YAML::Node &yaml,
                        double cell_size)
     : Box(yaml, cell_size)
-    , color(ros_type::getColorFromYaml(yaml))
+    , color(ros_type::getColorFrom(yaml["color"]))
 {}
 
 visualization_msgs::msg::Marker

@@ -26,6 +26,27 @@ Eigen::Vector3d OpenVdbEnvironmentModel::getEnvironmentMax() const
     return bounding_box_.getMaxInWorldCoordinates();
 }
 
+Occupancy OpenVdbEnvironmentModel::getOccupancy(const Eigen::Vector3d &p) const
+{
+    if (!bounding_box_.isInside(p))
+        return Occupancy::OutOfWorld;
+
+    return getGridValueAt(coord_tf_.toCellCoordinates(p));
+}
+
+Occupancy OpenVdbEnvironmentModel::getOccupancy(const openvdb::Coord &coord) const
+{
+    if (!bounding_box_.isInside(coord))
+        return Occupancy::OutOfWorld;
+
+    return getGridValueAt(coord);
+}
+
+Occupancy OpenVdbEnvironmentModel::getGridValueAt(const openvdb::Coord &coord) const
+{
+    return static_cast<Occupancy>(accessor_.getValue(coord));
+}
+
 bool OpenVdbEnvironmentModel::hasObstacleBetweenPoints(
         const Eigen::Vector3d &pa,
         const Eigen::Vector3d &pb) const
@@ -45,6 +66,7 @@ bool OpenVdbEnvironmentModel::hasObstacleBetweenPoints(
     // Traverse path
     unsigned steps = std::ceil(distance / coord_tf_.getCellSize());
         // Make sure no two iteration steps are separated by more than 1 cell
+    // TODO: This is not reliable! The path might traverse some cells on a length << cell_size
 
     double increment = distance / steps;
 
@@ -65,25 +87,37 @@ bool OpenVdbEnvironmentModel::hasObstacleBetweenPoints(
     return false;
 }
 
-Occupancy OpenVdbEnvironmentModel::getOccupancy(const Eigen::Vector3d &p) const
+CollisionTestResult OpenVdbEnvironmentModel::getCollisionDistance(
+        const Eigen::Vector3d &start_point,
+        const Eigen::Vector3d &direction,
+        double max_distance) const
 {
-    if (!bounding_box_.isInside(p))
-        return Occupancy::Outlet;
+    // TODO Improve, this approach is quick and dirty
 
-    return getGridValueAt(coord_tf_.toCellCoordinates(p));
-}
+    double check_distance = 0.01; // [m], check every cm
+    Eigen::Vector3d direction_normalised = direction.normalized();
 
-Occupancy OpenVdbEnvironmentModel::getOccupancy(const openvdb::Coord &coord) const
-{
-    if (!bounding_box_.isInside(coord))
-        return Occupancy::Outlet;
+    // set last_cell to invalid cell
+    openvdb::Coord last_cell = bounding_box_.getMinInCellCoordinates() - openvdb::Coord(1,1,1);
 
-    return getGridValueAt(coord);
-}
+    double distance = 0;
+    while (distance <= max_distance)
+    {
+        Eigen::Vector3d p = start_point + distance * direction_normalised;
+        openvdb::Coord cell = coord_tf_.toCellCoordinates(p);
 
-Occupancy OpenVdbEnvironmentModel::getGridValueAt(const openvdb::Coord &coord) const
-{
-    return static_cast<Occupancy>(accessor_.getValue(coord));
+        if (cell != last_cell)
+        {
+            last_cell = cell;
+            Occupancy cell_occupancy = getOccupancy(cell);
+            if (cell_occupancy != Occupancy::Free) // that is Occupied, Outlet or OutOfWorld
+                return CollisionTestResult(cell_occupancy, distance);
+        }
+
+        distance += check_distance;
+    }
+
+    return CollisionTestResult(Occupancy::Free, distance);
 }
 
 } // namespace gaden
